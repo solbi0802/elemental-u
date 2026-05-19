@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function Paywall({ readings }: Props) {
-  const { isPaid, unlockReadings } = useSajuStore();
+  const { isPaid, unlockReadings, isLoadingReadings } = useSajuStore();
 
   if (isPaid && readings) {
     const list = [
@@ -89,8 +89,17 @@ export function Paywall({ readings }: Props) {
         <p className={s.ctaDesc}>
           Get all 6 personalized readings powered by AI and centuries of Korean wisdom.
         </p>
-        <button type="button" className={s.ctaButton} onClick={unlockReadings}>
-          Get complete destiny — $0.99
+        <button
+          type="button"
+          className={s.ctaButton}
+          onClick={unlockReadings}
+          disabled={isLoadingReadings || !readings}
+        >
+          {isLoadingReadings
+            ? 'Preparing your reading…'
+            : !readings
+              ? 'Reading temporarily unavailable'
+              : 'Get complete destiny — $0.99'}
         </button>
         <small className={s.ctaFootnote}>One-time payment · Instant access</small>
       </motion.aside>

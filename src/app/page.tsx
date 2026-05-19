@@ -13,7 +13,7 @@ import {
 } from '@/components/KoreanPatterns/KoreanPatterns';
 
 export default function Home() {
-  const { result, readings, name } = useSajuStore();
+  const { result, readings, name, isLoadingReadings } = useSajuStore();
 
   return (
     <main>
@@ -43,6 +43,7 @@ export default function Home() {
             dominantElement={result.dominantElement}
             dayMaster={result.dayMaster}
             readings={readings}
+            isLoadingReadings={isLoadingReadings}
           />
 
           <PatternStrip />

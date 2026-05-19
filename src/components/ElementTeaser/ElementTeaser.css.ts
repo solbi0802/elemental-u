@@ -97,6 +97,11 @@ export const snippetText = style({
   WebkitMaskImage: 'linear-gradient(180deg, black 0%, black 62%, transparent 100%)',
 });
 
+export const loaderSlot = style({
+  maxWidth: '560px',
+  margin: `0 auto ${vars.space.lg}`,
+});
+
 export const cta = style({
   display: 'inline-flex',
   alignItems: 'center',
@@ -117,5 +122,11 @@ export const cta = style({
     color: vars.color.creamText,
     borderBottomColor: vars.color.creamText,
     transform: 'translateY(2px)',
+  },
+  ':disabled': {
+    color: vars.color.goldMuted,
+    borderBottomColor: vars.color.goldMuted,
+    cursor: 'not-allowed',
+    opacity: 0.7,
   },
 });

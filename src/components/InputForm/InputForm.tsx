@@ -17,7 +17,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export function InputForm() {
-  const { setInput, fetchSaju, isLoading } = useSajuStore();
+  const { setInput, fetchSaju, isLoadingChart } = useSajuStore();
 
   const {
     register,
@@ -96,8 +96,8 @@ export function InputForm() {
           </label>
         </div>
 
-        <button type="submit" className={s.submitButton} disabled={isLoading}>
-          {isLoading ? 'Reading your chart…' : 'Reveal my destiny'}
+        <button type="submit" className={s.submitButton} disabled={isLoadingChart}>
+          {isLoadingChart ? 'Reading your chart…' : 'Reveal my destiny'}
         </button>
       </motion.form>
 

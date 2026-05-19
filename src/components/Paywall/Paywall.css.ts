@@ -163,6 +163,11 @@ export const ctaButton = style({
   ':hover': {
     background: vars.color.creamText,
   },
+  ':disabled': {
+    background: vars.color.goldMuted,
+    cursor: 'not-allowed',
+    opacity: 0.7,
+  },
 });
 
 export const ctaFootnote = style({

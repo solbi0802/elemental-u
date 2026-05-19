@@ -4,12 +4,14 @@ import { motion } from 'framer-motion';
 import type { Element, SajuReadings } from '@/lib/saju/types';
 import { ELEMENT_META } from '@/lib/saju/types';
 import { fadeUp, staggerContainer } from '@/styles/animations';
+import { SajuLoader } from '@/components/SajuLoader/SajuLoader';
 import * as s from './ElementTeaser.css';
 
 interface Props {
   dominantElement: Element;
   dayMaster: Element;
   readings: SajuReadings | null;
+  isLoadingReadings: boolean;
 }
 
 /* First 1-2 sentences (or up to 220 chars) to give the bottom-fade mask
@@ -30,7 +32,7 @@ function scrollToPaywall() {
   });
 }
 
-export function ElementTeaser({ dominantElement, dayMaster, readings }: Props) {
+export function ElementTeaser({ dominantElement, dayMaster, readings, isLoadingReadings }: Props) {
   const dom = ELEMENT_META[dominantElement];
   const day = ELEMENT_META[dayMaster];
   const traits = dom.traits.slice(0, 3).map((t) => t.toLowerCase()).join(', ');
@@ -64,20 +66,25 @@ export function ElementTeaser({ dominantElement, dayMaster, readings }: Props) {
 
       <motion.hr className={s.divider} variants={fadeUp} aria-hidden="true" />
 
-      {snippet && (
+      {snippet ? (
         <motion.blockquote className={s.snippet} variants={fadeUp}>
           <span className={s.snippetMark} aria-hidden="true">“</span>
           <p className={s.snippetText}>{snippet}</p>
         </motion.blockquote>
-      )}
+      ) : isLoadingReadings ? (
+        <motion.div className={s.loaderSlot} variants={fadeUp}>
+          <SajuLoader />
+        </motion.div>
+      ) : null}
 
       <motion.button
         type="button"
         className={s.cta}
         onClick={scrollToPaywall}
         variants={fadeUp}
+        disabled={isLoadingReadings && !snippet}
       >
-        Continue reading ↓
+        {isLoadingReadings && !snippet ? 'Preparing your reading…' : 'Continue reading ↓'}
       </motion.button>
     </motion.section>
   );
