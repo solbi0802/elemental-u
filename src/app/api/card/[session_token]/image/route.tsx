@@ -28,7 +28,7 @@ export async function GET(request: Request, { params }: Params) {
 
   let fonts;
   try {
-    fonts = await loadCardFonts(request);
+    fonts = await loadCardFonts();
   } catch (err) {
     console.error('Card image font load failed:', err);
     return new Response('Font loading failed', { status: 500 });
