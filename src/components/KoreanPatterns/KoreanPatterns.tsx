@@ -3,7 +3,7 @@
 import * as s from './KoreanPatterns.css';
 
 /*
-  K-Saju pattern motifs — gold (#e8b94a / #d4a857) on deep jade canvas.
+  Elemental-U pattern motifs — gold (#e8b94a / #d4a857) on deep jade canvas.
   Two layers:
     1. <KoreanPatterns/>  — floating background, opacity 0.22–0.32 (visible but not blocking)
     2. <PatternStrip/>    — prominent horizontal band of 7 hanja seals, opacity 1.0

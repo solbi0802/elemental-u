@@ -1,6 +1,6 @@
 ## Overview
 
-K-Saju is a Korean Four Pillars (`四柱命理`) destiny reading service. The base atmosphere is a **deep jade canvas** (`{colors.canvas}` — #0d3d36) holding **gold Korean traditional patterns** as the dominant brand element. Where most fortune-telling sites lean into mystical purple gradients or generic mystic-tech aesthetics, K-Saju leans hard into Korean heritage — `壽福囍` seal motifs, octagonal flower lattices, and gold serif Hanja as the primary visual voltage.
+Elemental-U is a Korean Four Pillars (`四柱命理`) destiny reading service. The base atmosphere is a **deep jade canvas** (`{colors.canvas}` — #0d3d36) holding **gold Korean traditional patterns** as the dominant brand element. Where most fortune-telling sites lean into mystical purple gradients or generic mystic-tech aesthetics, Elemental-U leans hard into Korean heritage — `壽福囍` seal motifs, octagonal flower lattices, and gold serif Hanja as the primary visual voltage.
 
 Type voice runs **Cormorant Garamond** at weight 500 for display headlines (large display sizes with -1 to -2px letter-spacing) and **Inter** at standard weights for body, UI, and navigation. Hanja decorations (`壽`, `福`, `囍`, `命`, `木火土金水`) sit in **Noto Serif KR** at weight 700–900 — the heavier weight gives the seal-stamp impression that mirrors traditional Korean carved seals.
 
@@ -8,7 +8,7 @@ Component voltage comes from **gold linework on deep jade** — corner brackets 
 
 **Key Characteristics:**
 
-- Deep jade canvas (`{colors.canvas}` — #0d3d36). The dark green differentiates K-Saju from cool-purple competitor sites and roots the brand in Korean ceremonial color tradition.
+- Deep jade canvas (`{colors.canvas}` — #0d3d36). The dark green differentiates Elemental-U from cool-purple competitor sites and roots the brand in Korean ceremonial color tradition.
 - Gold primary CTAs (`{colors.gold-primary}` — #e8b94a) with deep-jade text. Buttons rounded `{rounded.sm}` (6px) — slightly more angular than typical SaaS to evoke ink-stamped seals.
 - Three jade surface tones (`{colors.canvas-soft}`, `{colors.canvas-deep}`, `{colors.canvas-elevated}`) provide depth without shadows.
 - Corner-bracket ornament (`L`-shaped gold brackets at card corners) is the signature visual treatment for primary surfaces.
@@ -123,7 +123,7 @@ Cormorant Garamond fallbacks to system serif if not loaded. Noto Serif KR `prelo
 
 ### Whitespace Philosophy
 
-K-Saju uses generous whitespace around display headlines and the pattern strip. The jade canvas + gold patterns + double-ring seals create a ceremonial weight that competing fortune-telling sites lack.
+Elemental-U uses generous whitespace around display headlines and the pattern strip. The jade canvas + gold patterns + double-ring seals create a ceremonial weight that competing fortune-telling sites lack.
 
 ## Elevation & Depth
 
@@ -213,7 +213,7 @@ The signature visual ornament: `L`-shaped 2px gold lines at the top-left and bot
 
 ### Do
 
-- Anchor every page on the deep jade canvas (`{colors.canvas}` — #0d3d36). The dark green is non-negotiable — it differentiates K-Saju from purple-mystic competitors.
+- Anchor every page on the deep jade canvas (`{colors.canvas}` — #0d3d36). The dark green is non-negotiable — it differentiates Elemental-U from purple-mystic competitors.
 - Keep Hanja decorations (`壽福囍`, `木火土金水`, `四柱`, `丙午`, `相生`/`相剋`) visible even in English-only UI. They are cultural symbols and design voltage, not translatable strings.
 - Use the pattern strip once per page. Two patterns strips compete; one anchors the brand.
 - Cycle reading cards through A → B → C → A → B → C. Repeating the same variant twice in a row reads as flat.

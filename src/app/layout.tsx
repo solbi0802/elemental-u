@@ -26,7 +26,7 @@ const hanja = Noto_Serif_KR({
 });
 
 export const metadata: Metadata = {
-  title: 'K-Saju — Discover Your Destiny Through Korean Astrology',
+  title: 'Elemental-U — Discover Your Destiny Through Korean Astrology',
   description:
     'Unlock your Four Pillars of Destiny with ancient Korean astrology. Get personalized Five Elements analysis, life fortune, career, love, and health readings.',
 };

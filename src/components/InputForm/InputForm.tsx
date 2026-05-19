@@ -8,9 +8,43 @@ import { useSajuStore } from '@/lib/store';
 import { fadeUp, staggerContainer } from '@/styles/animations';
 import * as s from './InputForm.css';
 
+const MIN_BIRTH_YEAR = 1900;
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
+
 const schema = z.object({
   name: z.string().min(1, 'Please enter your name'),
-  birthDate: z.string().min(1, 'Please select your date of birth'),
+  birthDate: z
+    .string()
+    .min(1, 'Please select your date of birth')
+    .superRefine((val, ctx) => {
+      /* Strict ISO format with a 4-digit year — guards against browsers that
+         accept 5+ digit year input via direct keyboard typing. */
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+        ctx.addIssue({ code: 'custom', message: 'Please enter a valid date' });
+        return;
+      }
+      const [year, month, day] = val.split('-').map(Number);
+      if (year < MIN_BIRTH_YEAR) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `Year must be ${MIN_BIRTH_YEAR} or later`,
+        });
+        return;
+      }
+      if (val > TODAY_ISO) {
+        ctx.addIssue({ code: 'custom', message: "Birth date can't be in the future" });
+        return;
+      }
+      /* Reject impossible calendar dates like 2024-02-30 */
+      const date = new Date(year, month - 1, day);
+      if (
+        date.getFullYear() !== year ||
+        date.getMonth() !== month - 1 ||
+        date.getDate() !== day
+      ) {
+        ctx.addIssue({ code: 'custom', message: 'Please enter a valid date' });
+      }
+    }),
   birthTime: z.string().optional(),
 });
 
@@ -80,6 +114,8 @@ export function InputForm() {
             <input
               type="date"
               className={s.fieldInput}
+              min={`${MIN_BIRTH_YEAR}-01-01`}
+              max={TODAY_ISO}
               aria-invalid={errors.birthDate ? true : undefined}
               {...register('birthDate')}
             />
