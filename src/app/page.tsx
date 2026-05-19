@@ -3,6 +3,7 @@
 import { useSajuStore } from '@/lib/store';
 import { InputForm } from '@/components/InputForm/InputForm';
 import { ElementChart } from '@/components/ElementChart/ElementChart';
+import { ElementTeaser } from '@/components/ElementTeaser/ElementTeaser';
 import { Paywall } from '@/components/Paywall/Paywall';
 import { Particles } from '@/components/Particles/Particles';
 import {
@@ -37,6 +38,12 @@ export default function Home() {
           <div style={{ padding: '0 24px', position: 'relative', zIndex: 1 }}>
             <WaveDivider />
           </div>
+
+          <ElementTeaser
+            dominantElement={result.dominantElement}
+            dayMaster={result.dayMaster}
+            readings={readings}
+          />
 
           <PatternStrip />
 

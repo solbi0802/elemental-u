@@ -77,7 +77,7 @@ export function Paywall({ readings }: Props) {
         ))}
       </motion.div>
 
-      <motion.div className={s.ctaBlock} variants={fadeUp}>
+      <motion.div id="paywall-cta" className={s.ctaBlock} variants={fadeUp}>
         <h3 className={s.ctaTitle}>Unlock your full reading</h3>
         <p className={s.ctaDesc}>
           Get all 6 personalized readings powered by AI and centuries of Korean wisdom.
