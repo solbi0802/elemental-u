@@ -125,7 +125,11 @@ export const fieldLabelText = style({
 
 export const dateRow = style({
   display: 'grid',
-  gridTemplateColumns: '1.5fr 1fr 1.2fr',
+  /* Day · Month · Year — DMY is the dominant English-speaking convention
+     outside the US (UK, AU, NZ, IE, IN, ZA, EU). Day select is narrow
+     (1-31), Month is widest (full English names up to "September"), Year
+     fits 4 digits. */
+  gridTemplateColumns: '1fr 1.6fr 1.3fr',
   gap: vars.space.sm,
   '@media': {
     'screen and (max-width: 420px)': {

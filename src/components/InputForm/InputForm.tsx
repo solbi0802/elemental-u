@@ -251,19 +251,6 @@ export function InputForm() {
           <div className={s.dateRow}>
             <select
               className={s.fieldSelect}
-              aria-label="Month"
-              aria-invalid={errors.birthMonth ? true : undefined}
-              {...register('birthMonth')}
-            >
-              <option value="">Month</option>
-              {MONTHS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-            <select
-              className={s.fieldSelect}
               aria-label="Day"
               aria-invalid={errors.birthDay ? true : undefined}
               {...register('birthDay')}
@@ -272,6 +259,19 @@ export function InputForm() {
               {DAYS.map((d) => (
                 <option key={d} value={d}>
                   {Number(d)}
+                </option>
+              ))}
+            </select>
+            <select
+              className={s.fieldSelect}
+              aria-label="Month"
+              aria-invalid={errors.birthMonth ? true : undefined}
+              {...register('birthMonth')}
+            >
+              <option value="">Month</option>
+              {MONTHS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
                 </option>
               ))}
             </select>
