@@ -66,42 +66,6 @@ export const divider = style({
   border: 'none',
 });
 
-export const snippet = style({
-  position: 'relative',
-  maxWidth: '560px',
-  margin: `0 auto ${vars.space.lg}`,
-  padding: `${vars.space.lg} ${vars.space.md} ${vars.space.xxl}`,
-  textAlign: 'left',
-});
-
-export const snippetMark = style({
-  fontFamily: vars.font.serif,
-  fontSize: '48px',
-  fontWeight: 700,
-  lineHeight: 1,
-  color: vars.color.goldLine,
-  display: 'block',
-  marginBottom: vars.space.xs,
-  opacity: 0.8,
-});
-
-export const snippetText = style({
-  fontFamily: vars.font.serif,
-  fontStyle: 'italic',
-  fontSize: '20px',
-  fontWeight: 500,
-  lineHeight: 1.6,
-  color: vars.color.creamText,
-  /* Soft fade on the bottom edge — suggests "there is more" */
-  maskImage: 'linear-gradient(180deg, black 0%, black 62%, transparent 100%)',
-  WebkitMaskImage: 'linear-gradient(180deg, black 0%, black 62%, transparent 100%)',
-});
-
-export const loaderSlot = style({
-  maxWidth: '560px',
-  margin: `0 auto ${vars.space.lg}`,
-});
-
 export const cta = style({
   display: 'inline-flex',
   alignItems: 'center',

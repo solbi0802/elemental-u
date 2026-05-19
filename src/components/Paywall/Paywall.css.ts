@@ -51,6 +51,21 @@ export const grid = style({
   },
 });
 
+/* Slot that takes the place of the locked-card grid while Gemini is
+   composing readings post-payment. Holds <SajuLoader> centered, with a
+   min-height that roughly matches the 6-card grid so the layout doesn't
+   collapse during the swap. */
+export const paywallLoaderSlot = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: '320px',
+  marginBottom: vars.space.xxl,
+  border: `1px solid ${vars.color.hairline}`,
+  borderRadius: vars.radius.lg,
+  background: vars.color.canvasSoft,
+});
+
 export const lockedCard = style({
   background: vars.color.canvasSoft,
   border: `1px solid ${vars.color.hairline}`,

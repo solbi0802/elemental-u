@@ -9,13 +9,30 @@ interface SajuStore {
   readings: SajuReadings | null;
   isLoadingChart: boolean;
   isLoadingReadings: boolean;
+  isProcessingPayment: boolean;
   error: string | null;
   isPaid: boolean;
 
   setInput: (name: string, birthDate: string, birthTime: string | null) => void;
   fetchSaju: () => Promise<void>;
-  unlockReadings: () => void;
+  /* Single entry point that future real-payment integration (Toss/Stripe)
+     will hook into. For now it fakes a 600ms processing window then fetches
+     readings. The gateway callback would replace the setTimeout. */
+  purchaseAndFetchReadings: () => Promise<void>;
+  retryReadings: () => Promise<void>;
   reset: () => void;
+}
+
+const PAYMENT_SIMULATION_MS = 600;
+
+async function fetchReadingsInternal(name: string, result: SajuResult) {
+  const res = await fetch('/api/saju/readings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, result }),
+  });
+  const data = (await res.json()) as { readings: SajuReadings | null };
+  return data.readings ?? null;
 }
 
 export const useSajuStore = create<SajuStore>((set, get) => ({
@@ -26,20 +43,19 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
   readings: null,
   isLoadingChart: false,
   isLoadingReadings: false,
+  isProcessingPayment: false,
   error: null,
   isPaid: false,
 
   setInput: (name, birthDate, birthTime) => set({ name, birthDate, birthTime }),
 
-  /* Two-step flow: chart resolves fast (~50ms), readings stream in the
-     background while the user explores the chart. */
+  /* Chart only — readings are NOT fetched here. They're gated behind payment. */
   fetchSaju: async () => {
-    const { name, birthDate, birthTime } = get();
+    const { birthDate, birthTime } = get();
     if (!birthDate) return;
 
-    set({ isLoadingChart: true, isLoadingReadings: true, error: null });
+    set({ isLoadingChart: true, error: null });
 
-    let result: SajuResult;
     try {
       const chartRes = await fetch('/api/saju/chart', {
         method: 'POST',
@@ -48,33 +64,43 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
       });
       if (!chartRes.ok) throw new Error('Failed to compute chart');
       const chartData = (await chartRes.json()) as { result: SajuResult };
-      result = chartData.result;
-      set({ result, isLoadingChart: false });
+      set({ result: chartData.result, isLoadingChart: false });
     } catch (err) {
-      set({
-        error: (err as Error).message,
-        isLoadingChart: false,
-        isLoadingReadings: false,
-      });
-      return;
+      set({ error: (err as Error).message, isLoadingChart: false });
     }
-
-    /* Fire-and-forget — does not block the chart from rendering. */
-    fetch('/api/saju/readings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, result }),
-    })
-      .then((res) => res.json())
-      .then((data: { readings: SajuReadings | null }) => {
-        set({ readings: data.readings ?? null, isLoadingReadings: false });
-      })
-      .catch(() => {
-        set({ readings: null, isLoadingReadings: false });
-      });
   },
 
-  unlockReadings: () => set({ isPaid: true }),
+  purchaseAndFetchReadings: async () => {
+    const { name, result } = get();
+    if (!result) return;
+
+    /* Step 1: simulate payment processing. A real gateway callback would
+       replace this delay and only proceed on confirmation. */
+    set({ isProcessingPayment: true });
+    await new Promise((resolve) => setTimeout(resolve, PAYMENT_SIMULATION_MS));
+
+    /* Step 2: payment "succeeded" — flip to paid state and begin Gemini fetch. */
+    set({ isProcessingPayment: false, isPaid: true, isLoadingReadings: true });
+
+    try {
+      const readings = await fetchReadingsInternal(name, result);
+      set({ readings, isLoadingReadings: false });
+    } catch {
+      set({ readings: null, isLoadingReadings: false });
+    }
+  },
+
+  retryReadings: async () => {
+    const { name, result } = get();
+    if (!result) return;
+    set({ isLoadingReadings: true });
+    try {
+      const readings = await fetchReadingsInternal(name, result);
+      set({ readings, isLoadingReadings: false });
+    } catch {
+      set({ readings: null, isLoadingReadings: false });
+    }
+  },
 
   reset: () =>
     set({
@@ -85,6 +111,7 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
       readings: null,
       isLoadingChart: false,
       isLoadingReadings: false,
+      isProcessingPayment: false,
       error: null,
       isPaid: false,
     }),
