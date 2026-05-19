@@ -8,6 +8,7 @@ import {
   markPaidWithoutReadings,
 } from '@/lib/db/purchases';
 import { createCheckout } from '@/lib/payment/lemonsqueezy';
+import type { SajuResult } from '@/lib/saju/types';
 
 interface CheckoutBody {
   name?: string;
@@ -15,18 +16,83 @@ interface CheckoutBody {
   birthTime?: string | null;
 }
 
+/* Strict config checks — guard against placeholder values in .env.local that
+   would otherwise be truthy and route us into the real LS / Supabase code
+   paths only to fail with cryptic errors deep in the SDKs.
+
+   - Lemon Squeezy keys are short alnum strings; require min length + numeric
+     IDs for store/variant.
+   - Supabase service_role is a JWT (always starts with 'eyJ') and the URL
+     follows a fixed pattern. */
 function hasLemonSqueezyConfig(): boolean {
-  return Boolean(
-    process.env.LEMONSQUEEZY_API_KEY &&
-      process.env.LEMONSQUEEZY_STORE_ID &&
-      process.env.LEMONSQUEEZY_VARIANT_ID,
+  const apiKey = process.env.LEMONSQUEEZY_API_KEY ?? '';
+  const storeId = process.env.LEMONSQUEEZY_STORE_ID ?? '';
+  const variantId = process.env.LEMONSQUEEZY_VARIANT_ID ?? '';
+  return (
+    apiKey.length >= 32 &&
+    /^\d+$/.test(storeId) &&
+    /^\d+$/.test(variantId)
   );
 }
 
 function hasSupabaseConfig(): boolean {
-  return Boolean(
-    process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY,
+  const url = process.env.SUPABASE_URL ?? '';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+  return (
+    url.startsWith('https://') &&
+    url.includes('.supabase.co') &&
+    key.startsWith('eyJ') &&
+    key.length > 100
   );
+}
+
+async function generateReadingsForBypass(name: string, sajuResult: SajuResult) {
+  try {
+    const gemini = await generateReadings(name || 'Friend', sajuResult);
+    return shapeReadings(gemini);
+  } catch (err) {
+    console.warn('Dev-bypass Gemini call failed:', (err as Error).message);
+    return null;
+  }
+}
+
+async function tryPersistBypass(input: {
+  name: string | null;
+  birthDate: string;
+  birthTime: string | null;
+  sajuResult: SajuResult;
+  readings: ReturnType<typeof shapeReadings> | null;
+}): Promise<string | null> {
+  if (!hasSupabaseConfig()) return null;
+  try {
+    const purchase = await insertPendingPurchase({
+      name: input.name,
+      birthDate: input.birthDate,
+      birthTime: input.birthTime,
+      sajuResult: input.sajuResult,
+    });
+    const devOrderId = `dev-bypass-${purchase.id}`;
+    if (input.readings) {
+      await markPaidWithReadings({
+        sessionToken: purchase.session_token,
+        lsOrderId: devOrderId,
+        paidAmount: 299,
+        paidCurrency: 'USD',
+        readings: input.readings,
+      });
+    } else {
+      await markPaidWithoutReadings({
+        sessionToken: purchase.session_token,
+        lsOrderId: devOrderId,
+        paidAmount: 299,
+        paidCurrency: 'USD',
+      });
+    }
+    return purchase.session_token;
+  } catch (err) {
+    console.warn('Dev-bypass Supabase write failed:', (err as Error).message);
+    return null;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -42,105 +108,54 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'birthDate is required' }, { status: 400 });
   }
 
-  /* Recompute saju server-side. Calculation is deterministic and fast
-     (~50ms) so there's no win to caching from the /chart call. */
   const [year, month, day] = birthDate.split('-').map(Number);
   const sajuResult = calculateSaju(year, month, day, birthTime ?? null);
 
-  /* === Dev bypass ===
-     When LEMONSQUEEZY_* env vars aren't set we treat this as a development
-     environment that doesn't have the real payment gateway wired up yet.
-     Generate the readings synchronously and return them in the same response
-     so the client can flip straight into the Unlocked state without an
-     external redirect. */
-  if (!hasLemonSqueezyConfig()) {
-    let readings = null;
+  /* === Real Lemon Squeezy flow ===
+     Only attempted when both LS *and* Supabase look properly configured.
+     Any failure inside this block silently falls through to the dev bypass
+     below — the user still gets readings, just without the LS hosted page. */
+  if (hasLemonSqueezyConfig() && hasSupabaseConfig()) {
     try {
-      const gemini = await generateReadings(name || 'Friend', sajuResult);
-      readings = shapeReadings(gemini);
+      const purchase = await insertPendingPurchase({
+        name: name ?? null,
+        birthDate,
+        birthTime: birthTime ?? null,
+        sajuResult,
+      });
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+      const redirectUrl = `${siteUrl}/?session=${purchase.session_token}&paid=true`;
+      const checkout = await createCheckout({
+        sessionToken: purchase.session_token,
+        redirectUrl,
+      });
+      return NextResponse.json({
+        checkout_url: checkout.url,
+        session_token: purchase.session_token,
+      });
     } catch (err) {
-      console.warn('Dev-bypass Gemini call failed:', (err as Error).message);
+      console.warn('Real LS flow failed, falling back to bypass:', (err as Error).message);
+      /* fall through */
     }
-
-    /* If Supabase is configured, persist the bypass purchase too so the
-       /card flow still has a row to render from. If Supabase isn't set up
-       either, the in-memory readings are still returned and the unlocked
-       view will work for the current session — but the /card page won't. */
-    let sessionToken: string | null = null;
-    if (hasSupabaseConfig()) {
-      try {
-        const purchase = await insertPendingPurchase({
-          name: name ?? null,
-          birthDate,
-          birthTime: birthTime ?? null,
-          sajuResult,
-        });
-        sessionToken = purchase.session_token;
-        const devOrderId = `dev-bypass-${purchase.id}`;
-        if (readings) {
-          await markPaidWithReadings({
-            sessionToken,
-            lsOrderId: devOrderId,
-            paidAmount: 299,
-            paidCurrency: 'USD',
-            readings,
-          });
-        } else {
-          await markPaidWithoutReadings({
-            sessionToken,
-            lsOrderId: devOrderId,
-            paidAmount: 299,
-            paidCurrency: 'USD',
-          });
-        }
-      } catch (err) {
-        console.warn('Dev-bypass Supabase write failed:', (err as Error).message);
-        sessionToken = null;
-      }
-    }
-
-    return NextResponse.json({
-      bypassed: true,
-      result: sajuResult,
-      readings,
-      session_token: sessionToken,
-    });
   }
 
-  /* === Real Lemon Squeezy flow === */
-  let purchase;
-  try {
-    purchase = await insertPendingPurchase({
-      name: name ?? null,
-      birthDate,
-      birthTime: birthTime ?? null,
-      sajuResult,
-    });
-  } catch (err) {
-    return NextResponse.json(
-      { error: 'Database error', detail: (err as Error).message },
-      { status: 500 },
-    );
-  }
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-  const redirectUrl = `${siteUrl}/?session=${purchase.session_token}&paid=true`;
-
-  let checkout;
-  try {
-    checkout = await createCheckout({
-      sessionToken: purchase.session_token,
-      redirectUrl,
-    });
-  } catch (err) {
-    return NextResponse.json(
-      { error: 'Payment provider error', detail: (err as Error).message },
-      { status: 502 },
-    );
-  }
+  /* === Dev bypass ===
+     Generates readings synchronously and returns them in the same response
+     so the client can flip straight into the Unlocked state. Used when the
+     env vars aren't set, or when the real flow above threw. */
+  const readings = await generateReadingsForBypass(name ?? '', sajuResult);
+  const sessionToken = await tryPersistBypass({
+    name: name ?? null,
+    birthDate,
+    birthTime: birthTime ?? null,
+    sajuResult,
+    readings,
+  });
 
   return NextResponse.json({
-    checkout_url: checkout.url,
-    session_token: purchase.session_token,
+    bypassed: true,
+    result: sajuResult,
+    readings,
+    session_token: sessionToken,
   });
 }
