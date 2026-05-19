@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { useSajuStore } from '@/lib/store';
 import type { SajuReadings } from '@/lib/saju/types';
 import { ReadingCard } from '@/components/ReadingCard/ReadingCard';
@@ -26,6 +27,7 @@ export function Paywall({ readings }: Props) {
     isPaid,
     isLoadingReadings,
     isProcessingPayment,
+    sessionToken,
     startCheckout,
     retryReadings,
   } = useSajuStore();
@@ -55,6 +57,14 @@ export function Paywall({ readings }: Props) {
             Your complete destiny
           </h2>
         </motion.header>
+
+        {sessionToken && (
+          <motion.div className={s.cardEntryRow} variants={fadeUp}>
+            <Link href={`/card/${sessionToken}`} className={s.cardEntryLink}>
+              View your destiny card →
+            </Link>
+          </motion.div>
+        )}
 
         {list.map((r, i) => (
           <ReadingCard key={r.title} reading={r} index={i} />
@@ -169,7 +179,7 @@ export function Paywall({ readings }: Props) {
           >
             {isProcessingPayment
               ? 'Processing payment…'
-              : 'Get complete destiny — $0.99'}
+              : 'Get complete destiny — $2.99'}
           </button>
           <small className={s.ctaFootnote}>One-time payment · Instant access</small>
         </motion.aside>

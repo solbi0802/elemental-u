@@ -221,5 +221,35 @@ export const unlockedTitle = style({
   lineHeight: 1.1,
   color: vars.color.creamText,
   textAlign: 'center',
-  margin: `0 0 ${vars.space.xxl}`,
+  margin: `0 0 ${vars.space.lg}`,
+});
+
+/* Inline link that sits between the "Your complete destiny" header and the
+   six reading cards, sending the user to /card/[token] to view + share the
+   shareable PNG. */
+export const cardEntryRow = style({
+  display: 'flex',
+  justifyContent: 'center',
+  marginBottom: vars.space.xxl,
+});
+
+export const cardEntryLink = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  fontFamily: vars.font.mono,
+  fontSize: '12px',
+  fontWeight: 700,
+  letterSpacing: '2.5px',
+  textTransform: 'uppercase',
+  color: vars.color.goldPrimary,
+  textDecoration: 'none',
+  padding: `${vars.space.sm} ${vars.space.lg}`,
+  border: `1px solid ${vars.color.goldLine}`,
+  borderRadius: vars.radius.pill,
+  transition: 'background 0.2s, color 0.2s, border-color 0.2s',
+  ':hover': {
+    background: vars.color.goldPrimary,
+    color: vars.color.onGold,
+    borderColor: vars.color.goldPrimary,
+  },
 });
