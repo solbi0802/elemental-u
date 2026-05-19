@@ -9,7 +9,9 @@ import { fadeUp, staggerContainer } from '@/styles/animations';
 import * as s from './InputForm.css';
 
 const MIN_BIRTH_YEAR = 1900;
-const TODAY_ISO = new Date().toISOString().slice(0, 10);
+const TODAY = new Date();
+const CURRENT_YEAR = TODAY.getFullYear();
+const TODAY_ISO = TODAY.toISOString().slice(0, 10);
 
 const schema = z.object({
   name: z.string().min(1, 'Please enter your name'),
@@ -20,22 +22,30 @@ const schema = z.object({
       /* Strict ISO format with a 4-digit year — guards against browsers that
          accept 5+ digit year input via direct keyboard typing. */
       if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) {
-        ctx.addIssue({ code: 'custom', message: 'Please enter a valid date' });
+        ctx.addIssue({ code: 'custom', message: 'Please enter a valid date (YYYY-MM-DD)' });
         return;
       }
       const [year, month, day] = val.split('-').map(Number);
-      if (year < MIN_BIRTH_YEAR) {
+
+      if (year < MIN_BIRTH_YEAR || year > CURRENT_YEAR) {
         ctx.addIssue({
           code: 'custom',
-          message: `Year must be ${MIN_BIRTH_YEAR} or later`,
+          message: `Year must be between ${MIN_BIRTH_YEAR} and ${CURRENT_YEAR}`,
         });
         return;
       }
-      if (val > TODAY_ISO) {
-        ctx.addIssue({ code: 'custom', message: "Birth date can't be in the future" });
+
+      if (month < 1 || month > 12) {
+        ctx.addIssue({ code: 'custom', message: 'Month must be between 01 and 12' });
         return;
       }
-      /* Reject impossible calendar dates like 2024-02-30 */
+
+      if (day < 1 || day > 31) {
+        ctx.addIssue({ code: 'custom', message: 'Day must be between 01 and 31' });
+        return;
+      }
+
+      /* Reject impossible calendar dates like 2024-02-30 or 2024-04-31 */
       const date = new Date(year, month - 1, day);
       if (
         date.getFullYear() !== year ||
@@ -43,6 +53,14 @@ const schema = z.object({
         date.getDate() !== day
       ) {
         ctx.addIssue({ code: 'custom', message: 'Please enter a valid date' });
+        return;
+      }
+
+      /* Catch the edge case where year/month/day are individually valid but
+         the full date lands in the future (e.g. 2026-12-31 when today is
+         2026-05-19). */
+      if (val > TODAY_ISO) {
+        ctx.addIssue({ code: 'custom', message: "Birth date can't be in the future" });
       }
     }),
   birthTime: z.string().optional(),
