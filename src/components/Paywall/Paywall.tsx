@@ -26,7 +26,7 @@ export function Paywall({ readings }: Props) {
     isPaid,
     isLoadingReadings,
     isProcessingPayment,
-    purchaseAndFetchReadings,
+    startCheckout,
     retryReadings,
   } = useSajuStore();
 
@@ -164,7 +164,7 @@ export function Paywall({ readings }: Props) {
           <button
             type="button"
             className={s.ctaButton}
-            onClick={() => void purchaseAndFetchReadings()}
+            onClick={() => void startCheckout()}
             disabled={isProcessingPayment}
           >
             {isProcessingPayment
