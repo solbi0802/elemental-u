@@ -45,27 +45,28 @@ export function ElementTeaser({ dominantElement, dayMaster, readings }: Props) {
       whileInView="visible"
       viewport={{ once: true }}
       variants={staggerContainer}
+      aria-labelledby="teaser-heading"
     >
-      <motion.p className={s.eyebrow} variants={fadeUp}>
-        Your Path · 命
-      </motion.p>
+      <motion.header className={s.header} variants={fadeUp}>
+        <p className={s.eyebrow}>Your Path · 命</p>
 
-      <motion.h2 className={s.headline} variants={fadeUp}>
-        You walk the path of{' '}
-        <em className={s.archetype}>{dom.archetype}</em>
-      </motion.h2>
+        <h2 id="teaser-heading" className={s.headline}>
+          You walk the path of{' '}
+          <em className={s.archetype}>{dom.archetype}</em>
+        </h2>
 
-      <motion.p className={s.body} variants={fadeUp}>
-        Born of {dom.label} and grounded in {day.label}, you channel{' '}
-        {traits} energy. Your {day.label} day master shapes how this{' '}
-        {dom.label.toLowerCase()} moves through the world.
-      </motion.p>
+        <p className={s.body}>
+          Born of {dom.label} and grounded in {day.label}, you channel{' '}
+          {traits} energy. Your {day.label} day master shapes how this{' '}
+          {dom.label.toLowerCase()} moves through the world.
+        </p>
+      </motion.header>
 
-      <motion.hr className={s.divider} variants={fadeUp} aria-hidden />
+      <motion.hr className={s.divider} variants={fadeUp} aria-hidden="true" />
 
       {snippet && (
         <motion.blockquote className={s.snippet} variants={fadeUp}>
-          <span className={s.snippetMark} aria-hidden>“</span>
+          <span className={s.snippetMark} aria-hidden="true">“</span>
           <p className={s.snippetText}>{snippet}</p>
         </motion.blockquote>
       )}

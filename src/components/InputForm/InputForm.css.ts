@@ -13,6 +13,13 @@ export const section = style({
   zIndex: 1,
 });
 
+export const heroHeader = style({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  textAlign: 'center',
+});
+
 export const eyebrow = style({
   fontFamily: vars.font.mono,
   fontSize: '12px',
@@ -95,6 +102,10 @@ export const fieldGroup = style({
 
 export const fieldLabel = style({
   display: 'block',
+});
+
+export const fieldLabelText = style({
+  display: 'block',
   fontFamily: vars.font.mono,
   fontSize: '11px',
   fontWeight: 600,
@@ -169,6 +180,7 @@ export const submitButton = style({
 });
 
 export const footnote = style({
+  display: 'block',
   fontSize: '12px',
   color: vars.color.goldMuted,
   letterSpacing: '0.5px',

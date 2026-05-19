@@ -99,7 +99,7 @@ function FlowerLattice({ size = 100, color = GOLD_LINE, opacity = 0.45 }: {
 /* ── Wave divider (해파문) ── horizontal band separator ── */
 export function WaveDivider({ color = GOLD_LINE }: { color?: string }) {
   return (
-    <svg className={s.waveDivider} viewBox="0 0 400 30" fill="none">
+    <svg className={s.waveDivider} viewBox="0 0 400 30" fill="none" aria-hidden="true">
       {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
         <path
           key={i}
@@ -233,7 +233,7 @@ function LotusCircle() {
 /* Small seal — used as inline ornament inside cards (single hanja in double-ring circle) */
 export function HanjaSeal({ char = '命', size = 44 }: { char?: string; size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 60 60" fill="none">
+    <svg width={size} height={size} viewBox="0 0 60 60" fill="none" aria-hidden="true">
       <circle cx="30" cy="30" r="28" stroke={GOLD_LINE} strokeWidth="1.5" />
       <circle cx="30" cy="30" r="23" stroke={GOLD_LINE} strokeWidth="0.8" />
       <text x="30" y="40" textAnchor="middle" fontSize="22" fill={GOLD} fontWeight="900"
@@ -245,7 +245,7 @@ export function HanjaSeal({ char = '命', size = 44 }: { char?: string; size?: n
 /* ── Prominent decorative band — 7 seals across ── */
 export function PatternStrip() {
   return (
-    <div className={s.stripWrap}>
+    <div className={s.stripWrap} aria-hidden="true">
       <div className={s.stripRow}>
         <div className={s.stripCell}><LongevitySeal /></div>
         <div className={s.stripCell}><OctagonalFlower /></div>
@@ -262,7 +262,7 @@ export function PatternStrip() {
 /* ── Floating background layer ── */
 export function KoreanPatterns() {
   return (
-    <div className={s.layer}>
+    <div className={s.layer} aria-hidden="true">
       {/* Stepped clouds */}
       <div className={s.motif} style={{ top: '4%', left: '0%' }}>
         <SteppedCloud size={280} color={GOLD_LINE} opacity={0.32} />

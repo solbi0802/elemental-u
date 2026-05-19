@@ -39,13 +39,15 @@ export function Paywall({ readings }: Props) {
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
+        aria-labelledby="unlocked-heading"
       >
-        <motion.p className={s.unlockedEyebrow} variants={fadeUp}>
-          READINGS UNLOCKED
-        </motion.p>
-        <motion.h2 className={s.unlockedTitle} variants={fadeUp}>
-          Your complete destiny
-        </motion.h2>
+        <motion.header variants={fadeUp}>
+          <p className={s.unlockedEyebrow}>Readings Unlocked</p>
+          <h2 id="unlocked-heading" className={s.unlockedTitle}>
+            Your complete destiny
+          </h2>
+        </motion.header>
+
         {list.map((r, i) => (
           <ReadingCard key={r.title} reading={r} index={i} />
         ))}
@@ -60,33 +62,38 @@ export function Paywall({ readings }: Props) {
       whileInView="visible"
       viewport={{ once: true }}
       variants={staggerContainer}
+      aria-labelledby="locked-heading"
     >
-      <motion.p className={s.eyebrow} variants={fadeUp}>6 PERSONALIZED READINGS</motion.p>
-      <motion.h2 className={s.title} variants={fadeUp}>Go deeper into your chart</motion.h2>
+      <motion.header variants={fadeUp}>
+        <p className={s.eyebrow}>6 Personalized Readings</p>
+        <h2 id="locked-heading" className={s.title}>
+          Go deeper into your chart
+        </h2>
+      </motion.header>
 
-      <motion.div className={s.grid} variants={fadeUp}>
+      <motion.ul className={s.grid} variants={fadeUp} aria-label="Locked readings">
         {SCROLLS.map((item) => (
-          <div key={item.name} className={s.lockedCard}>
-            <span className={s.lockedIcon}>{item.icon}</span>
-            <div className={s.lockedInfo}>
+          <li key={item.name} className={s.lockedCard}>
+            <span className={s.lockedIcon} aria-hidden="true">{item.icon}</span>
+            <span className={s.lockedInfo}>
               <span className={s.lockedName}>{item.name}</span>
               <span className={s.lockedDesc}>{item.desc}</span>
-            </div>
-            <span className={s.lockBadge}>🔒</span>
-          </div>
+            </span>
+            <span className={s.lockBadge} aria-hidden="true">🔒</span>
+          </li>
         ))}
-      </motion.div>
+      </motion.ul>
 
-      <motion.div id="paywall-cta" className={s.ctaBlock} variants={fadeUp}>
+      <motion.aside id="paywall-cta" className={s.ctaBlock} variants={fadeUp}>
         <h3 className={s.ctaTitle}>Unlock your full reading</h3>
         <p className={s.ctaDesc}>
           Get all 6 personalized readings powered by AI and centuries of Korean wisdom.
         </p>
-        <button className={s.ctaButton} onClick={unlockReadings}>
+        <button type="button" className={s.ctaButton} onClick={unlockReadings}>
           Get complete destiny — $0.99
         </button>
-        <p className={s.ctaFootnote}>One-time payment · Instant access</p>
-      </motion.div>
+        <small className={s.ctaFootnote}>One-time payment · Instant access</small>
+      </motion.aside>
     </motion.section>
   );
 }

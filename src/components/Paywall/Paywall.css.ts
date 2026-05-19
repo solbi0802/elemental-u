@@ -18,7 +18,7 @@ export const eyebrow = style({
   textTransform: 'uppercase',
   color: vars.color.goldPrimary,
   textAlign: 'center',
-  marginBottom: vars.space.md,
+  margin: `0 0 ${vars.space.md}`,
 });
 
 export const title = style({
@@ -29,7 +29,7 @@ export const title = style({
   lineHeight: 1.1,
   color: vars.color.creamText,
   textAlign: 'center',
-  marginBottom: vars.space.xxl,
+  margin: `0 0 ${vars.space.xxl}`,
   '@media': {
     'screen and (max-width: 768px)': {
       fontSize: '30px',
@@ -42,6 +42,8 @@ export const grid = style({
   gridTemplateColumns: 'repeat(2, 1fr)',
   gap: vars.space.sm,
   marginBottom: vars.space.xxl,
+  listStyle: 'none',
+  padding: 0,
   '@media': {
     'screen and (max-width: 520px)': {
       gridTemplateColumns: '1fr',
@@ -132,7 +134,7 @@ export const ctaTitle = style({
   letterSpacing: '-0.5px',
   lineHeight: 1.15,
   color: vars.color.creamText,
-  marginBottom: vars.space.md,
+  margin: `0 0 ${vars.space.md}`,
 });
 
 export const ctaDesc = style({
@@ -164,6 +166,7 @@ export const ctaButton = style({
 });
 
 export const ctaFootnote = style({
+  display: 'block',
   fontSize: '12px',
   color: vars.color.goldMuted,
   letterSpacing: '0.5px',
@@ -187,7 +190,7 @@ export const unlockedEyebrow = style({
   textTransform: 'uppercase',
   color: vars.color.goldPrimary,
   textAlign: 'center',
-  marginBottom: vars.space.md,
+  margin: `0 0 ${vars.space.md}`,
 });
 
 export const unlockedTitle = style({
@@ -198,5 +201,5 @@ export const unlockedTitle = style({
   lineHeight: 1.1,
   color: vars.color.creamText,
   textAlign: 'center',
-  marginBottom: vars.space.xxl,
+  margin: `0 0 ${vars.space.xxl}`,
 });

@@ -10,6 +10,13 @@ export const section = style({
   zIndex: 1,
 });
 
+export const header = style({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  textAlign: 'center',
+});
+
 export const eyebrow = style({
   fontFamily: vars.font.mono,
   fontSize: '12px',

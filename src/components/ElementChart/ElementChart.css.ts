@@ -41,6 +41,25 @@ export const colorBlock = style({
   },
 });
 
+export const chartHeader = style({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  textAlign: 'center',
+});
+
+export const visuallyHidden = style({
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+});
+
 export const eyebrow = style({
   fontFamily: vars.font.mono,
   fontSize: '12px',
@@ -76,6 +95,7 @@ export const masterCard = style({
   borderRadius: vars.radius.md,
   padding: '10px 20px',
   marginBottom: vars.space.xl,
+  margin: `0 0 ${vars.space.xl}`,
 });
 
 export const masterLabel = style({
@@ -97,6 +117,7 @@ export const chartWrap = style({
   width: '100%',
   maxWidth: '520px',
   position: 'relative',
+  margin: 0,
 });
 
 export const svg = style({
@@ -136,6 +157,9 @@ export const traitRow = style({
   display: 'flex',
   flexWrap: 'wrap',
   gap: vars.space.xxs,
+  listStyle: 'none',
+  padding: 0,
+  margin: 0,
 });
 
 export const trait = style({
@@ -156,6 +180,8 @@ export const legend = style({
   fontFamily: vars.font.mono,
   letterSpacing: '1px',
   color: vars.color.creamSoft,
+  listStyle: 'none',
+  padding: 0,
 });
 
 export const legendItem = style({
@@ -180,6 +206,7 @@ export const pillarsLabel = style({
   letterSpacing: '3px',
   textTransform: 'uppercase',
   color: vars.color.goldPrimary,
+  margin: 0,
 });
 
 export const pillarsRow = style({
@@ -187,6 +214,8 @@ export const pillarsRow = style({
   gap: vars.space.sm,
   flexWrap: 'wrap',
   justifyContent: 'center',
+  margin: 0,
+  padding: 0,
 });
 
 export const pillarCard = style({
@@ -212,7 +241,15 @@ export const pillarTitle = style({
   marginBottom: vars.space.xs,
 });
 
+export const pillarDefinition = style({
+  margin: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+});
+
 export const pillarHanja = style({
+  display: 'block',
   fontFamily: vars.font.hanja,
   fontSize: '26px',
   fontWeight: 700,
@@ -220,6 +257,7 @@ export const pillarHanja = style({
 });
 
 export const pillarSub = style({
+  display: 'block',
   fontFamily: vars.font.hanja,
   fontSize: '18px',
   fontWeight: 500,
@@ -228,6 +266,7 @@ export const pillarSub = style({
 });
 
 export const pillarRomanji = style({
+  display: 'block',
   fontFamily: vars.font.mono,
   fontSize: '10px',
   letterSpacing: '0.5px',

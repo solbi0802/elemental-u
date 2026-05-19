@@ -49,23 +49,24 @@ export function ReadingCard({ reading, index }: Props) {
       viewport={{ once: true }}
       custom={index}
     >
-      <div className={s.seal}>
+      <div className={s.seal} aria-hidden="true">
         <HanjaSeal char={sealChar} size={56} />
       </div>
 
-      <div className={s.eyebrow}>{SUBTITLES[reading.title] || ''}</div>
+      <header className={s.cardHeader}>
+        <p className={s.eyebrow}>{SUBTITLES[reading.title] || ''}</p>
+        <div className={s.titleRow}>
+          <span className={s.icon} aria-hidden="true">{reading.icon}</span>
+          <h3 className={s.title}>{reading.title}</h3>
+        </div>
+      </header>
 
-      <div className={s.header}>
-        <span className={s.icon}>{reading.icon}</span>
-        <h3 className={s.title}>{reading.title}</h3>
-      </div>
+      <p className={s.body}>{reading.content}</p>
 
-      <div className={s.body}>{reading.content}</div>
-
-      <div className={s.insight}>
-        <div className={s.insightLabel}>KEY INSIGHT</div>
-        <div className={s.insightText}>{reading.keyInsight}</div>
-      </div>
+      <footer className={s.insight}>
+        <p className={s.insightLabel}>Key Insight</p>
+        <p className={s.insightText}>{reading.keyInsight}</p>
+      </footer>
     </motion.article>
   );
 }

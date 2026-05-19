@@ -38,42 +38,62 @@ export function InputForm() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
+      aria-labelledby="saju-heading"
     >
-      <motion.p className={s.eyebrow} variants={fadeUp}>
-        四柱命理 · Four Pillars of Destiny
-      </motion.p>
+      <motion.header className={s.heroHeader} variants={fadeUp}>
+        <p className={s.eyebrow}>四柱命理 · Four Pillars of Destiny</p>
 
-      <motion.h1 className={s.heading} variants={fadeUp}>
-        Discover your destiny through{' '}
-        <span className={s.headingAccent}>Korean astrology</span>
-      </motion.h1>
+        <h1 id="saju-heading" className={s.heading}>
+          Discover your destiny through{' '}
+          <span className={s.headingAccent}>Korean astrology</span>
+        </h1>
 
-      <motion.p className={s.subtitle} variants={fadeUp}>
-        Saju reveals your elemental nature using the Four Pillars — an ancient system that reads the cosmic energy of your birth.
-      </motion.p>
+        <p className={s.subtitle}>
+          Saju reveals your elemental nature using the Four Pillars — an ancient
+          system that reads the cosmic energy of your birth.
+        </p>
+      </motion.header>
 
       <motion.form
         className={s.formCard}
         onSubmit={handleSubmit(onSubmit)}
         variants={fadeUp}
+        noValidate
       >
         <div className={s.fieldGroup}>
-          <label className={s.fieldLabel}>Name</label>
-          <input className={s.fieldInput} placeholder="Your name" autoComplete="off" {...register('name')} />
-          {errors.name && <p className={s.fieldError}>{errors.name.message}</p>}
-        </div>
-
-        <div className={s.fieldGroup}>
-          <label className={s.fieldLabel}>Date of birth</label>
-          <input type="date" className={s.fieldInput} {...register('birthDate')} />
-          {errors.birthDate && <p className={s.fieldError}>{errors.birthDate.message}</p>}
+          <label className={s.fieldLabel}>
+            <span className={s.fieldLabelText}>Name</span>
+            <input
+              className={s.fieldInput}
+              placeholder="Your name"
+              autoComplete="off"
+              aria-invalid={errors.name ? true : undefined}
+              {...register('name')}
+            />
+          </label>
+          {errors.name && <p className={s.fieldError} role="alert">{errors.name.message}</p>}
         </div>
 
         <div className={s.fieldGroup}>
           <label className={s.fieldLabel}>
-            Time of birth <span className={s.fieldOptional}>(optional)</span>
+            <span className={s.fieldLabelText}>Date of birth</span>
+            <input
+              type="date"
+              className={s.fieldInput}
+              aria-invalid={errors.birthDate ? true : undefined}
+              {...register('birthDate')}
+            />
           </label>
-          <input type="time" className={s.fieldInput} {...register('birthTime')} />
+          {errors.birthDate && <p className={s.fieldError} role="alert">{errors.birthDate.message}</p>}
+        </div>
+
+        <div className={s.fieldGroup}>
+          <label className={s.fieldLabel}>
+            <span className={s.fieldLabelText}>
+              Time of birth <span className={s.fieldOptional}>(optional)</span>
+            </span>
+            <input type="time" className={s.fieldInput} {...register('birthTime')} />
+          </label>
         </div>
 
         <button type="submit" className={s.submitButton} disabled={isLoading}>
@@ -81,9 +101,9 @@ export function InputForm() {
         </button>
       </motion.form>
 
-      <motion.p className={s.footnote} variants={fadeUp}>
+      <motion.small className={s.footnote} variants={fadeUp}>
         Your data is never stored or shared.
-      </motion.p>
+      </motion.small>
     </motion.section>
   );
 }

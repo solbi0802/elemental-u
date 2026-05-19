@@ -61,28 +61,36 @@ export function ElementChart({ balance, dominantElement, dayMaster, fourPillars,
     : '0';
 
   return (
-    <motion.div
+    <motion.section
       className={s.outer}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true }}
       variants={staggerContainer}
+      aria-labelledby="chart-heading"
     >
       <div className={s.colorBlock}>
-        <motion.p className={s.eyebrow} variants={fadeUp}>FIVE ELEMENTS · FREE</motion.p>
-        <motion.h2 className={s.title} variants={fadeUp}>
-          {name}&apos;s elemental chart
-        </motion.h2>
+        <motion.header className={s.chartHeader} variants={fadeUp}>
+          <p className={s.eyebrow}>Five Elements · 五行</p>
+          <h1 id="chart-heading" className={s.title}>
+            {name}&apos;s elemental chart
+          </h1>
 
-        <motion.div className={s.masterCard} variants={fadeUp}>
-          <span className={s.masterLabel}>Day Master</span>
-          <span className={s.masterValue} style={{ color: dm.color }}>
-            {dm.emoji} {dm.label} — {dm.archetype}
-          </span>
-        </motion.div>
+          <p className={s.masterCard}>
+            <span className={s.masterLabel}>Day Master</span>
+            <span className={s.masterValue} style={{ color: dm.color }}>
+              {dm.emoji} {dm.label} — {dm.archetype}
+            </span>
+          </p>
+        </motion.header>
 
-        <motion.div className={s.chartWrap} variants={scaleIn} ref={chartRef}>
-          <svg viewBox="0 0 520 440" className={s.svg}>
+        <motion.figure className={s.chartWrap} variants={scaleIn} ref={chartRef}>
+          <svg
+            viewBox="0 0 520 440"
+            className={s.svg}
+            role="img"
+            aria-label={`Five-element pentagon chart showing dominant element ${ELEMENT_META[dominantElement].label} for ${name}`}
+          >
             <defs>
               <marker id="a-g" viewBox="0 0 10 10" refX="8" refY="5"
                 markerWidth="5" markerHeight="5" orient="auto-start-reverse">
@@ -130,57 +138,66 @@ export function ElementChart({ balance, dominantElement, dayMaster, fourPillars,
             ))}
           </svg>
 
+          <figcaption className={s.visuallyHidden}>
+            Pentagonal Five Elements (Wood, Fire, Earth, Metal, Water) chart.
+            Green arrows indicate the generating cycle (相生); red dashed lines
+            indicate the controlling cycle (相剋).
+          </figcaption>
+
           {/* HTML tooltip — above SVG, no overlap */}
           {hoveredElement && hoveredMeta && (
             <div
               className={s.tooltip}
               style={{ left: tipLeft, top: tipTop }}
+              role="tooltip"
             >
               <div className={s.tooltipTitle} style={{ color: hoveredMeta.color }}>
                 {hoveredMeta.emoji} {hoveredMeta.label}
               </div>
               <div className={s.tooltipArchetype}>{hoveredMeta.archetype}</div>
-              <div className={s.traitRow}>
+              <ul className={s.traitRow}>
                 {hoveredMeta.traits.map(t => (
-                  <span key={t} className={s.trait}>{t}</span>
+                  <li key={t} className={s.trait}>{t}</li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
-        </motion.div>
+        </motion.figure>
 
-        <motion.div className={s.legend} variants={fadeUp}>
-          <div className={s.legendItem}>
-            <svg width="22" height="2"><line x1="0" y1="1" x2="22" y2="1" stroke="#3aa15c" strokeWidth="1.5" /></svg>
+        <motion.ul className={s.legend} variants={fadeUp} aria-label="Chart legend">
+          <li className={s.legendItem}>
+            <svg width="22" height="2" aria-hidden="true"><line x1="0" y1="1" x2="22" y2="1" stroke="#3aa15c" strokeWidth="1.5" /></svg>
             Generates · 相生
-          </div>
-          <div className={s.legendItem}>
-            <svg width="22" height="2"><line x1="0" y1="1" x2="22" y2="1" stroke="#f15b46" strokeWidth="1.2" strokeDasharray="3,3" opacity="0.7" /></svg>
+          </li>
+          <li className={s.legendItem}>
+            <svg width="22" height="2" aria-hidden="true"><line x1="0" y1="1" x2="22" y2="1" stroke="#f15b46" strokeWidth="1.2" strokeDasharray="3,3" opacity="0.7" /></svg>
             Controls · 相剋
-          </div>
-        </motion.div>
+          </li>
+        </motion.ul>
 
-        <motion.div className={s.pillarsWrap} variants={fadeUp}>
-          <div className={s.pillarsLabel}>FOUR PILLARS · 四柱</div>
-          <div className={s.pillarsRow}>
+        <motion.section className={s.pillarsWrap} variants={fadeUp} aria-labelledby="pillars-label">
+          <h2 id="pillars-label" className={s.pillarsLabel}>Four Pillars · 四柱</h2>
+          <dl className={s.pillarsRow}>
             {pillars.map((p, i) => {
               if (!p) return null;
               const sc = ELEMENT_META[p.stemElement].color;
               const bc = ELEMENT_META[p.branchElement].color;
               return (
                 <div key={PILLAR_NAMES[i]} className={s.pillarCard}>
-                  <div className={s.pillarTitle}>{PILLAR_NAMES[i]}</div>
-                  <div className={s.pillarHanja} style={{ color: sc }}>{p.stem}</div>
-                  <div className={s.pillarSub} style={{ color: bc }}>{p.branch}</div>
-                  <div className={s.pillarRomanji}>
-                    {STEM_NAMES[p.stem].split(' ')[0]}·{BRANCH_NAMES[p.branch].split(' ')[0]}
-                  </div>
+                  <dt className={s.pillarTitle}>{PILLAR_NAMES[i]}</dt>
+                  <dd className={s.pillarDefinition}>
+                    <span className={s.pillarHanja} style={{ color: sc }}>{p.stem}</span>
+                    <span className={s.pillarSub} style={{ color: bc }}>{p.branch}</span>
+                    <span className={s.pillarRomanji}>
+                      {STEM_NAMES[p.stem].split(' ')[0]}·{BRANCH_NAMES[p.branch].split(' ')[0]}
+                    </span>
+                  </dd>
                 </div>
               );
             })}
-          </div>
-        </motion.div>
+          </dl>
+        </motion.section>
       </div>
-    </motion.div>
+    </motion.section>
   );
 }

@@ -37,6 +37,10 @@ export const seal = style({
   transform: 'rotate(-6deg)',
 });
 
+export const cardHeader = style({
+  marginBottom: vars.space.lg,
+});
+
 export const eyebrow = style({
   fontFamily: vars.font.mono,
   fontSize: '11px',
@@ -44,14 +48,13 @@ export const eyebrow = style({
   letterSpacing: '2px',
   textTransform: 'uppercase',
   color: vars.color.goldPrimary,
-  marginBottom: vars.space.sm,
+  margin: `0 0 ${vars.space.sm}`,
 });
 
-export const header = style({
+export const titleRow = style({
   display: 'flex',
   alignItems: 'center',
   gap: vars.space.md,
-  marginBottom: vars.space.lg,
 });
 
 export const icon = style({
@@ -74,6 +77,7 @@ export const body = style({
   lineHeight: 1.7,
   whiteSpace: 'pre-wrap',
   color: vars.color.creamSoft,
+  margin: 0,
 });
 
 export const insight = style({
@@ -90,7 +94,7 @@ export const insightLabel = style({
   fontWeight: 600,
   letterSpacing: '2px',
   textTransform: 'uppercase',
-  marginBottom: vars.space.xxs,
+  margin: `0 0 ${vars.space.xxs}`,
   color: vars.color.goldPrimary,
 });
 
@@ -99,4 +103,5 @@ export const insightText = style({
   fontWeight: 500,
   lineHeight: 1.55,
   color: vars.color.creamText,
+  margin: 0,
 });
