@@ -2,8 +2,11 @@
 
 import { motion } from 'framer-motion';
 import type { Element } from '@/lib/saju/types';
-import { ELEMENT_META } from '@/lib/saju/types';
 import { fadeUp, staggerContainer } from '@/styles/animations';
+import {
+  buildArchetypeHeadline,
+  buildArchetypeText,
+} from '@/components/SajuCard/buildArchetypeText';
 import * as s from './ElementTeaser.css';
 
 interface Props {
@@ -19,9 +22,8 @@ function scrollToPaywall() {
 }
 
 export function ElementTeaser({ dominantElement, dayMaster }: Props) {
-  const dom = ELEMENT_META[dominantElement];
-  const day = ELEMENT_META[dayMaster];
-  const traits = dom.traits.slice(0, 3).map((t) => t.toLowerCase()).join(', ');
+  const { prefix, archetype } = buildArchetypeHeadline(dominantElement);
+  const body = buildArchetypeText(dominantElement, dayMaster);
 
   return (
     <motion.section
@@ -36,15 +38,11 @@ export function ElementTeaser({ dominantElement, dayMaster }: Props) {
         <p className={s.eyebrow}>Your Path · 命</p>
 
         <h2 id="teaser-heading" className={s.headline}>
-          You walk the path of{' '}
-          <em className={s.archetype}>{dom.archetype}</em>
+          {prefix}{' '}
+          <em className={s.archetype}>{archetype}</em>
         </h2>
 
-        <p className={s.body}>
-          Born of {dom.label} and grounded in {day.label}, you channel{' '}
-          {traits} energy. Your {day.label} day master shapes how this{' '}
-          {dom.label.toLowerCase()} moves through the world.
-        </p>
+        <p className={s.body}>{body}</p>
       </motion.header>
 
       <motion.hr className={s.divider} variants={fadeUp} aria-hidden="true" />
