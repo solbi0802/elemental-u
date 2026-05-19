@@ -58,13 +58,18 @@ export function Paywall({ readings }: Props) {
           </h2>
         </motion.header>
 
-        {sessionToken && (
-          <motion.div className={s.cardEntryRow} variants={fadeUp}>
-            <Link href={`/card/${sessionToken}`} className={s.cardEntryLink}>
-              View your destiny card →
-            </Link>
-          </motion.div>
-        )}
+        {/* When Supabase isn't configured (dev bypass with no persistence),
+            sessionToken is null and we fall back to /card/preview which
+            renders from the zustand store. The full route with Save/Share
+            kicks in once a real session_token exists. */}
+        <motion.div className={s.cardEntryRow} variants={fadeUp}>
+          <Link
+            href={sessionToken ? `/card/${sessionToken}` : '/card/preview'}
+            className={s.cardEntryLink}
+          >
+            View your destiny card →
+          </Link>
+        </motion.div>
 
         {list.map((r, i) => (
           <ReadingCard key={r.title} reading={r} index={i} />

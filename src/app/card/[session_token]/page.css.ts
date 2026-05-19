@@ -93,3 +93,12 @@ export const cardScale = style({
     },
   },
 });
+
+export const previewHint = style({
+  marginTop: vars.space.lg,
+  maxWidth: '480px',
+  fontSize: '13px',
+  lineHeight: 1.6,
+  color: vars.color.creamSoft,
+  textAlign: 'center',
+});
