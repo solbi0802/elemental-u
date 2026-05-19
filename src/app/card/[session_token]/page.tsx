@@ -27,6 +27,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     purchase.saju_result.dayMaster,
   );
 
+  /* Absolute URL needed so social previewers (Twitter/X, Discord, Kakao,
+     iMessage) can fetch the PNG. NEXT_PUBLIC_SITE_URL is the production
+     domain; in local dev the OG image is still reachable but link previews
+     only matter on prod. */
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+  const imageUrl = `${siteUrl}/api/card/${session_token}/image`;
+
   return {
     title: `${name}'s Saju Reading · Elemental-U`,
     description,
@@ -34,13 +41,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `${name} walks the path of ${archetype}`,
       description,
       type: 'article',
-      /* og:image URL is added in the next commit once the PNG endpoint
-         exists. Twitter card meta follows the same swap. */
+      images: [{ url: imageUrl, width: 1080, height: 1080 }],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${name}'s Saju Reading`,
       description,
+      images: [imageUrl],
     },
   };
 }
