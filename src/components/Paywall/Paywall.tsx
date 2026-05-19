@@ -28,9 +28,32 @@ export function Paywall({ readings }: Props) {
     isLoadingReadings,
     isProcessingPayment,
     sessionToken,
+    name,
+    birthDate,
+    birthTime,
     startCheckout,
     retryReadings,
   } = useSajuStore();
+
+  /* Build the per-user destiny-card URL.
+     - With Supabase: /card/[session_token] — the route loads the row
+       server-side and OG meta resolves to the right image.
+     - Without Supabase (dev bypass): pass the raw inputs as query params
+       so the preview page can recalculate saju client-side. Inputs are
+       short (~50 chars total) which keeps the share URL clean — far
+       better than base64-encoding the whole sajuResult blob. */
+  let cardHref: string;
+  if (sessionToken) {
+    cardHref = `/card/${sessionToken}`;
+  } else if (birthDate) {
+    const params = new URLSearchParams();
+    if (name) params.set('n', name);
+    params.set('d', birthDate);
+    if (birthTime) params.set('t', birthTime);
+    cardHref = `/card/preview?${params.toString()}`;
+  } else {
+    cardHref = '/card/preview';
+  }
 
   /* === Unlocked: payment completed AND readings arrived === */
   if (isPaid && readings) {
@@ -58,15 +81,8 @@ export function Paywall({ readings }: Props) {
           </h2>
         </motion.header>
 
-        {/* When Supabase isn't configured (dev bypass with no persistence),
-            sessionToken is null and we fall back to /card/preview which
-            renders from the zustand store. The full route with Save/Share
-            kicks in once a real session_token exists. */}
         <motion.div className={s.cardEntryRow} variants={fadeUp}>
-          <Link
-            href={sessionToken ? `/card/${sessionToken}` : '/card/preview'}
-            className={s.cardEntryLink}
-          >
+          <Link href={cardHref} className={s.cardEntryLink}>
             View your destiny card →
           </Link>
         </motion.div>

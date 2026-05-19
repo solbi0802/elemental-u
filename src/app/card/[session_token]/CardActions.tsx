@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as s from './CardActions.css';
 
 interface Props {
@@ -8,54 +8,61 @@ interface Props {
   cardName: string;
 }
 
-/* Save + Share buttons. The actual save/share targets are filled in once
-   the /api/card/[token]/image PNG endpoint exists (next commit). Until
-   then the buttons are wired but use the page URL as a placeholder share
-   target so the flow can be tested end-to-end visually. */
+/* Save downloads the PNG that the /api/card/[token]/image endpoint
+   generates server-side. Share publishes the page URL through the native
+   share sheet, falling back to clipboard copy on desktop. */
 export function CardActions({ sessionToken, cardName }: Props) {
-  const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState<'share' | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const shareUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/card/${sessionToken}`
-      : '';
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    };
+  }, []);
+
+  function flashFeedback(message: string) {
+    setFeedback(message);
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => setFeedback(null), 2200);
+  }
+
   const imageUrl = `/api/card/${sessionToken}/image`;
   const downloadFileName = `elemental-u-${cardName.toLowerCase().replace(/\s+/g, '-') || 'saju'}.png`;
 
   async function handleShare() {
-    if (typeof navigator === 'undefined') return;
-
-    /* On mobile, the Web Share API can attach the PNG as a file so the
-       receiving app (Instagram, Kakao, Messages) sees the image directly. */
-    if (typeof navigator.share === 'function') {
-      try {
-        const res = await fetch(imageUrl);
-        if (res.ok && typeof navigator.canShare === 'function') {
-          const blob = await res.blob();
-          const file = new File([blob], downloadFileName, { type: 'image/png' });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              url: shareUrl,
-              title: `${cardName}'s Saju Reading`,
-            });
-            return;
-          }
-        }
-        await navigator.share({ url: shareUrl, title: `${cardName}'s Saju Reading` });
-        return;
-      } catch {
-        /* User cancelled or share rejected — fall through to copy. */
-      }
-    }
-
-    /* Desktop fallback: copy share URL to clipboard. */
+    if (busy) return;
+    setBusy('share');
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* Clipboard blocked — nothing to do. */
+      const shareUrl = window.location.href;
+      const shareTitle = `${cardName}'s Saju Reading · Elemental-U`;
+
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        try {
+          await navigator.share({ url: shareUrl, title: shareTitle });
+          return;
+        } catch (err) {
+          if ((err as Error).name === 'AbortError') return;
+          /* fall through to clipboard */
+        }
+      }
+
+      if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.clipboard?.writeText === 'function'
+      ) {
+        await navigator.clipboard.writeText(shareUrl);
+        flashFeedback('Link copied');
+        return;
+      }
+
+      flashFeedback('Share not supported');
+    } catch (err) {
+      console.error('Share failed:', err);
+      flashFeedback('Share failed');
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -68,8 +75,13 @@ export function CardActions({ sessionToken, cardName }: Props) {
       >
         Save as PNG
       </a>
-      <button type="button" className={s.button} onClick={handleShare}>
-        {copied ? 'Link copied' : 'Share'}
+      <button
+        type="button"
+        className={s.button}
+        onClick={handleShare}
+        disabled={busy !== null}
+      >
+        {busy === 'share' ? 'Sharing…' : feedback ?? 'Share link'}
       </button>
     </div>
   );

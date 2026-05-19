@@ -36,8 +36,6 @@ async function capturePng(node: HTMLElement): Promise<Blob> {
 export function PreviewActions({ cardRef, cardName }: Props) {
   const [busy, setBusy] = useState<'save' | 'share' | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  /* Use a guard so a leftover setTimeout doesn't fire on an unmounted
-     component after navigation. */
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -54,6 +52,7 @@ export function PreviewActions({ cardRef, cardName }: Props) {
 
   const fileName = `elemental-u-${cardName.toLowerCase().replace(/\s+/g, '-') || 'saju'}.png`;
 
+  /* Save → captures the rendered card DOM to PNG and downloads it locally. */
   async function handleSave() {
     if (!cardRef.current || busy) return;
     setBusy('save');
@@ -75,45 +74,39 @@ export function PreviewActions({ cardRef, cardName }: Props) {
     }
   }
 
+  /* Share → shares the page URL through the native share sheet. No file
+     attachment — the user can download with Save separately. On desktop or
+     unsupported browsers, falls back to copying the URL to the clipboard. */
   async function handleShare() {
-    if (!cardRef.current || busy) return;
+    if (busy) return;
     setBusy('share');
     try {
-      const blob = await capturePng(cardRef.current);
-      const file = new File([blob], fileName, { type: 'image/png' });
+      const shareUrl = window.location.href;
+      const shareTitle = `${cardName}'s Saju Reading · Elemental-U`;
 
-      /* Preferred path: attach the PNG file to the native share sheet so
-         the receiving app (Instagram, Kakao, Messages) gets the image
-         directly instead of just a link. */
-      if (
-        typeof navigator !== 'undefined' &&
-        typeof navigator.share === 'function' &&
-        typeof navigator.canShare === 'function' &&
-        navigator.canShare({ files: [file] })
-      ) {
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
         try {
-          await navigator.share({
-            files: [file],
-            title: `${cardName}'s Saju Reading`,
-          });
+          await navigator.share({ url: shareUrl, title: shareTitle });
           return;
         } catch (err) {
-          if ((err as Error).name === 'AbortError') return; // user cancelled
+          if ((err as Error).name === 'AbortError') return;
           /* fall through to clipboard */
         }
       }
 
-      /* Desktop / unsupported fallback: copy the page URL so the user can
-         paste it somewhere. The PNG itself is reachable via Save. */
-      if (typeof navigator !== 'undefined' && typeof navigator.clipboard?.writeText === 'function') {
-        await navigator.clipboard.writeText(window.location.href);
+      if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.clipboard?.writeText === 'function'
+      ) {
+        await navigator.clipboard.writeText(shareUrl);
         flashFeedback('Link copied');
         return;
       }
-      flashFeedback('Use Save instead');
+
+      flashFeedback('Share not supported');
     } catch (err) {
       console.error('Share failed:', err);
-      flashFeedback('Share failed — try Save');
+      flashFeedback('Share failed');
     } finally {
       setBusy(null);
     }
@@ -135,7 +128,7 @@ export function PreviewActions({ cardRef, cardName }: Props) {
         onClick={handleShare}
         disabled={busy !== null}
       >
-        {busy === 'share' ? 'Preparing…' : feedback ?? 'Share'}
+        {busy === 'share' ? 'Sharing…' : feedback ?? 'Share link'}
       </button>
     </div>
   );

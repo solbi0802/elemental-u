@@ -1,42 +1,91 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSajuStore } from '@/lib/store';
+import { calculateSaju } from '@/lib/saju/calculator';
+import type { SajuResult } from '@/lib/saju/types';
 import { SajuCard } from '@/components/SajuCard/SajuCard';
 import { buildArchetypeText } from '@/components/SajuCard/buildArchetypeText';
 import { PreviewActions } from './PreviewActions';
 import * as s from '../[session_token]/page.css';
 
-/* Fallback card preview route — reads everything from the zustand store
-   instead of Supabase. Used when the dev bypass path couldn't persist a
-   purchase row (e.g. SUPABASE_SERVICE_ROLE_KEY missing or broken), so the
-   user can still see and share their card without a database.
+/* Card preview that works without a Supabase row. State comes from one
+   of two sources, in order of preference:
 
-   Save/Share here use html-to-image to capture the rendered DOM client-side
-   instead of going through /api/card/[token]/image — that endpoint needs
-   a real session_token. Output quality is slightly different from the
-   satori-rendered server PNG (DOM fonts vs. embedded fonts) but visually
-   indistinguishable for the saju-card use case. */
+   1. URL search params (?n=…&d=YYYY-MM-DD&t=HH:MM). Paywall builds these
+      when sending the user here in dev mode. The page parses them and
+      recomputes saju client-side via calculateSaju, so each user gets a
+      short, shareable URL — recipients open it and see the sender's
+      card without any database lookup.
 
-export default function CardPreviewPage() {
+   2. Zustand store — for same-tab navigation from Paywall where the
+      query params weren't built.
+
+   No state means we redirect to / so the user can fill the form first. */
+
+interface CardState {
+  name: string;
+  birthDate: string;
+  sajuResult: SajuResult;
+}
+
+function safeCalculate(birthDate: string, birthTime: string | null): SajuResult | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return null;
+  const [year, month, day] = birthDate.split('-').map(Number);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+  try {
+    return calculateSaju(year, month, day, birthTime);
+  } catch {
+    return null;
+  }
+}
+
+function CardPreviewContent() {
   const router = useRouter();
-  const { result, name, birthDate, isPaid } = useSajuStore();
+  const searchParams = useSearchParams();
+  const storeState = useSajuStore();
   const cardScaleRef = useRef<HTMLDivElement>(null);
 
-  /* Without a calculated saju there's nothing to render. Bounce to / so
-     the user can fill the form first. */
-  useEffect(() => {
-    if (!result || !birthDate || !isPaid) {
-      router.replace('/');
+  const state: CardState | null = useMemo(() => {
+    const paramDate = searchParams.get('d');
+    if (paramDate) {
+      const sajuResult = safeCalculate(paramDate, searchParams.get('t') ?? null);
+      if (sajuResult) {
+        return {
+          name: searchParams.get('n') || 'Anonymous',
+          birthDate: paramDate,
+          sajuResult,
+        };
+      }
     }
-  }, [result, birthDate, isPaid, router]);
+    if (storeState.result && storeState.birthDate && storeState.isPaid) {
+      return {
+        name: storeState.name || 'Anonymous',
+        birthDate: storeState.birthDate,
+        sajuResult: storeState.result,
+      };
+    }
+    return null;
+  }, [
+    searchParams,
+    storeState.result,
+    storeState.birthDate,
+    storeState.isPaid,
+    storeState.name,
+  ]);
 
-  if (!result || !birthDate || !isPaid) return null;
+  useEffect(() => {
+    if (!state) router.replace('/');
+  }, [state, router]);
 
-  const archetypeText = buildArchetypeText(result.dominantElement, result.dayMaster);
-  const displayName = name || 'Anonymous';
+  if (!state) return null;
+
+  const archetypeText = buildArchetypeText(
+    state.sajuResult.dominantElement,
+    state.sajuResult.dayMaster,
+  );
 
   return (
     <main className={s.page}>
@@ -53,16 +102,26 @@ export default function CardPreviewPage() {
         <div className={s.cardFrame}>
           <div className={s.cardScale} ref={cardScaleRef}>
             <SajuCard
-              name={displayName}
-              birthDate={birthDate}
-              sajuResult={result}
+              name={state.name}
+              birthDate={state.birthDate}
+              sajuResult={state.sajuResult}
               archetypeText={archetypeText}
             />
           </div>
         </div>
 
-        <PreviewActions cardRef={cardScaleRef} cardName={displayName} />
+        <PreviewActions cardRef={cardScaleRef} cardName={state.name} />
       </section>
     </main>
+  );
+}
+
+/* useSearchParams() requires a <Suspense> boundary in production builds
+   so Next.js can defer prerender for routes that read query params. */
+export default function CardPreviewPage() {
+  return (
+    <Suspense fallback={null}>
+      <CardPreviewContent />
+    </Suspense>
   );
 }
