@@ -20,15 +20,8 @@ interface SajuStore {
 
   setInput: (name: string, birthDate: string, birthTime: string | null) => void;
   fetchSaju: () => Promise<void>;
-  /* Real entry point — creates a pending purchase row server-side, then
-     redirects the browser to the Lemon Squeezy hosted checkout. */
   startCheckout: () => Promise<void>;
-  /* Called from page.tsx on mount when ?session=... or localStorage has a
-     token. Fetches /api/payment/verify, hydrates the store, and polls until
-     readings appear (or timeout). */
   hydrateFromSession: (token: string) => Promise<void>;
-  /* "Try again" after a failed Gemini generation. Already paid — only
-     re-runs Gemini. */
   retryReadings: () => Promise<void>;
   reset: () => void;
 }
@@ -66,9 +59,22 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
   error: null,
   isPaid: false,
 
-  setInput: (name, birthDate, birthTime) => set({ name, birthDate, birthTime }),
+  /* Submitting new birth data is a fresh start — wipe any stale session
+     token, readings, and paid status from a previous abandoned checkout
+     so the new chart isn't shadowed by a leftover hydrate cycle. */
+  setInput: (name, birthDate, birthTime) => {
+    persistToken(null);
+    set({
+      name,
+      birthDate,
+      birthTime,
+      sessionToken: null,
+      readings: null,
+      isPaid: false,
+      isLoadingReadings: false,
+    });
+  },
 
-  /* Chart only — readings stay gated behind payment. */
   fetchSaju: async () => {
     const { birthDate, birthTime } = get();
     if (!birthDate) return;
@@ -95,7 +101,13 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
 
     set({ isProcessingPayment: true, error: null });
 
-    let data: { checkout_url: string; session_token: string };
+    let data: {
+      checkout_url?: string;
+      session_token?: string | null;
+      bypassed?: boolean;
+      result?: SajuResult;
+      readings?: SajuReadings | null;
+    };
     try {
       const res = await fetch('/api/payment/checkout', {
         method: 'POST',
@@ -103,14 +115,40 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
         body: JSON.stringify({ name, birthDate, birthTime }),
       });
       if (!res.ok) throw new Error('Failed to start checkout');
-      data = (await res.json()) as { checkout_url: string; session_token: string };
+      data = await res.json();
     } catch (err) {
       set({ error: (err as Error).message, isProcessingPayment: false });
       return;
     }
 
-    /* Persist token before redirecting — if the user kills the LS tab and
-       reopens our site, the home page will find this and resume. */
+    /* === Dev bypass path ===
+       Server returned readings inline because LEMONSQUEEZY_API_KEY isn't
+       configured. Flip straight to the Unlocked state without an external
+       redirect. The session_token may be null if Supabase also isn't
+       configured — the /card flow gracefully degrades in that case. */
+    if (data.bypassed) {
+      if (data.session_token) {
+        persistToken(data.session_token);
+      }
+      set({
+        result: data.result ?? get().result,
+        readings: data.readings ?? null,
+        sessionToken: data.session_token ?? null,
+        isPaid: true,
+        isProcessingPayment: false,
+        isLoadingReadings: false,
+      });
+      return;
+    }
+
+    /* === Normal Lemon Squeezy redirect path === */
+    if (!data.checkout_url || !data.session_token) {
+      set({
+        error: 'Unexpected checkout response',
+        isProcessingPayment: false,
+      });
+      return;
+    }
     persistToken(data.session_token);
     set({ sessionToken: data.session_token });
     window.location.href = data.checkout_url;
@@ -118,32 +156,30 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
 
   hydrateFromSession: async (token: string) => {
     set({ sessionToken: token, isLoadingReadings: true });
-    persistToken(token);
 
     const started = Date.now();
     while (Date.now() - started < POLL_TIMEOUT_MS) {
       const data = await fetchVerify(token);
       if (!data) {
-        /* 404 — the token is invalid or expired. Clear and give up. */
+        /* 404 — token invalid or expired. Clear and return to a fresh form. */
         persistToken(null);
         set({
           sessionToken: null,
           isLoadingReadings: false,
-          error: 'Session not found',
+          error: null,
+          name: '',
+          result: null,
         });
         return;
       }
 
-      /* Always restore the saju chart and name on first hit so the page
-         can render ElementChart immediately while we keep polling for
-         readings. */
-      set({
-        name: data.name ?? '',
-        result: data.saju_result,
-      });
-
       if (data.status === 'paid' && data.readings) {
+        /* Happy path — payment confirmed, readings ready. Persist so the
+           user can refresh and keep seeing their result. */
+        persistToken(token);
         set({
+          name: data.name ?? '',
+          result: data.saju_result,
           readings: data.readings,
           isPaid: true,
           isLoadingReadings: false,
@@ -152,7 +188,11 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
       }
 
       if (data.status === 'failed') {
+        /* Paid but Gemini failed — show chart + retry CTA. */
+        persistToken(token);
         set({
+          name: data.name ?? '',
+          result: data.saju_result,
           isPaid: true,
           readings: null,
           isLoadingReadings: false,
@@ -160,19 +200,30 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
         return;
       }
 
-      /* Still pending. If ls_order_id is missing, the user abandoned the
-         checkout (we have a pending row but no payment). Stop polling and
-         leave them in the locked Paywall state. */
       if (!data.ls_order_id) {
-        set({ isLoadingReadings: false });
+        /* User abandoned the checkout — clear stale state and restore the
+           fresh form view. Without this, the in-flight pending row would
+           keep masking the InputForm with old data. */
+        persistToken(null);
+        set({
+          sessionToken: null,
+          isLoadingReadings: false,
+          name: '',
+          result: null,
+        });
         return;
       }
 
+      /* status='pending' && ls_order_id present — webhook is still
+         processing. Show the chart while we wait for readings. */
+      set({
+        name: data.name ?? '',
+        result: data.saju_result,
+      });
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
     }
 
-    /* Hit the overall timeout — keep state hydrated but stop the loader so
-       the UI doesn't spin forever. */
+    /* Hit the overall timeout. Stop the loader but keep the chart visible. */
     set({ isLoadingReadings: false });
   },
 
@@ -189,12 +240,10 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
         body: JSON.stringify({ session_token: sessionToken }),
       });
     } catch {
-      /* Network failure on the retry trigger itself — just stop spinning. */
       set({ isLoadingReadings: false });
       return;
     }
 
-    /* Reuse the polling loop to wait for the row to flip to paid+readings. */
     await get().hydrateFromSession(sessionToken);
   },
 
