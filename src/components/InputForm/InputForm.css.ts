@@ -100,6 +100,13 @@ export const fieldGroup = style({
   marginBottom: vars.space.md,
 });
 
+export const fieldset = style({
+  border: 'none',
+  padding: 0,
+  margin: `0 0 ${vars.space.md}`,
+  minWidth: 0,
+});
+
 export const fieldLabel = style({
   display: 'block',
 });
@@ -113,6 +120,35 @@ export const fieldLabelText = style({
   textTransform: 'uppercase',
   color: vars.color.goldPrimary,
   marginBottom: vars.space.xs,
+  padding: 0,
+});
+
+export const dateRow = style({
+  display: 'grid',
+  gridTemplateColumns: '1.5fr 1fr 1.2fr',
+  gap: vars.space.sm,
+  '@media': {
+    'screen and (max-width: 420px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+});
+
+export const timeRow = style({
+  display: 'grid',
+  gridTemplateColumns: '1fr auto 1fr',
+  gap: vars.space.xs,
+  alignItems: 'center',
+  maxWidth: '220px',
+});
+
+export const timeColon = style({
+  fontFamily: vars.font.mono,
+  fontSize: '22px',
+  fontWeight: 600,
+  color: vars.color.goldPrimary,
+  lineHeight: 1,
+  textAlign: 'center',
 });
 
 export const fieldOptional = style({
@@ -134,19 +170,57 @@ export const fieldInput = style({
   height: '44px',
   transition: 'border-color 0.2s',
   fontFamily: vars.font.sans,
+  minWidth: 0,
   ':focus': {
     borderColor: vars.color.goldPrimary,
   },
   '::placeholder': {
     color: vars.color.creamMuted,
   },
-  /* Style date/time picker indicators for dark mode */
+  /* Hide spinner buttons on number inputs (browser-native, look broken on dark canvas) */
   selectors: {
-    '&::-webkit-calendar-picker-indicator': {
-      filter: 'invert(0.85) sepia(0.6) saturate(2) hue-rotate(355deg)',
-      cursor: 'pointer',
+    '&[type="number"]::-webkit-outer-spin-button, &[type="number"]::-webkit-inner-spin-button': {
+      WebkitAppearance: 'none',
+      margin: 0,
+    },
+    '&[type="number"]': {
+      MozAppearance: 'textfield',
     },
   },
+});
+
+/* Gold chevron SVG embedded as background-image so the select arrow stays
+   on-brand on the dark jade canvas. */
+const CHEVRON_GOLD =
+  'url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27 viewBox=%270 0 12 8%27 fill=%27none%27><path d=%27M1 1.5l5 5 5-5%27 stroke=%27%23d4a857%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/></svg>")';
+
+export const fieldSelect = style({
+  width: '100%',
+  background: vars.color.canvasDeep,
+  backgroundImage: CHEVRON_GOLD,
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 12px center',
+  backgroundSize: '12px 8px',
+  border: `1px solid ${vars.color.hairline}`,
+  borderRadius: vars.radius.sm,
+  padding: '12px 36px 12px 14px',
+  color: vars.color.creamText,
+  fontSize: '15px',
+  outline: 'none',
+  height: '44px',
+  transition: 'border-color 0.2s',
+  fontFamily: vars.font.sans,
+  cursor: 'pointer',
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  MozAppearance: 'none',
+  minWidth: 0,
+  ':focus': {
+    borderColor: vars.color.goldPrimary,
+  },
+  /* Native option list inherits OS colors — we accept that. Limiting risk by
+     using common values (numbers + English month names) keeps it readable
+     even when the dropdown adopts system styling. */
 });
 
 export const fieldError = style({
