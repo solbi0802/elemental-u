@@ -1,23 +1,29 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSajuStore } from '@/lib/store';
 import { SajuCard } from '@/components/SajuCard/SajuCard';
 import { buildArchetypeText } from '@/components/SajuCard/buildArchetypeText';
+import { PreviewActions } from './PreviewActions';
 import * as s from '../[session_token]/page.css';
 
 /* Fallback card preview route — reads everything from the zustand store
    instead of Supabase. Used when the dev bypass path couldn't persist a
    purchase row (e.g. SUPABASE_SERVICE_ROLE_KEY missing or broken), so the
-   user can still see what their card looks like. Save/Share aren't wired
-   here because they need a server-side PNG endpoint with a real
-   session_token. Documented inline. */
+   user can still see and share their card without a database.
+
+   Save/Share here use html-to-image to capture the rendered DOM client-side
+   instead of going through /api/card/[token]/image — that endpoint needs
+   a real session_token. Output quality is slightly different from the
+   satori-rendered server PNG (DOM fonts vs. embedded fonts) but visually
+   indistinguishable for the saju-card use case. */
 
 export default function CardPreviewPage() {
   const router = useRouter();
   const { result, name, birthDate, isPaid } = useSajuStore();
+  const cardScaleRef = useRef<HTMLDivElement>(null);
 
   /* Without a calculated saju there's nothing to render. Bounce to / so
      the user can fill the form first. */
@@ -42,10 +48,10 @@ export default function CardPreviewPage() {
 
       <section className={s.cardSection}>
         <h1 className={s.subtitle}>Your destiny card</h1>
-        <p className={s.eyebrow}>Preview · Dev mode</p>
+        <p className={s.eyebrow}>四柱命理 · Save or share</p>
 
         <div className={s.cardFrame}>
-          <div className={s.cardScale}>
+          <div className={s.cardScale} ref={cardScaleRef}>
             <SajuCard
               name={displayName}
               birthDate={birthDate}
@@ -55,14 +61,7 @@ export default function CardPreviewPage() {
           </div>
         </div>
 
-        {/* Save / Share require a persisted Supabase row (session_token).
-            Surface that requirement clearly instead of stubbing buttons that
-            would 404. The production path with proper SUPABASE_* env vars
-            routes through /card/[session_token] which has working buttons. */}
-        <p className={s.previewHint}>
-          Save &amp; share will activate once payments are connected. For now,
-          take a screenshot to keep your card.
-        </p>
+        <PreviewActions cardRef={cardScaleRef} cardName={displayName} />
       </section>
     </main>
   );
