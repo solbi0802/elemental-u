@@ -99,7 +99,17 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
     const { name, birthDate, birthTime } = get();
     if (!birthDate) return;
 
+    /* Phase 1 — brief payment-processing feedback on the CTA button. */
     set({ isProcessingPayment: true, error: null });
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    /* Phase 2 — optimistically flip to the "loading readings" state so
+       the Paywall transitions from CTA → SajuLoader pentagon while the
+       Gemini call (in the dev-bypass path, sync inside the checkout
+       endpoint) runs server-side. For real LS, this state is visible
+       only for the ~200 ms it takes the checkout API to respond with a
+       redirect URL — minor flash, acceptable. */
+    set({ isProcessingPayment: false, isPaid: true, isLoadingReadings: true });
 
     let data: {
       checkout_url?: string;
@@ -117,15 +127,18 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
       if (!res.ok) throw new Error('Failed to start checkout');
       data = await res.json();
     } catch (err) {
-      set({ error: (err as Error).message, isProcessingPayment: false });
+      set({
+        error: (err as Error).message,
+        isPaid: false,
+        isLoadingReadings: false,
+      });
       return;
     }
 
     /* === Dev bypass path ===
        Server returned readings inline because LEMONSQUEEZY_API_KEY isn't
-       configured. Flip straight to the Unlocked state without an external
-       redirect. The session_token may be null if Supabase also isn't
-       configured — the /card flow gracefully degrades in that case. */
+       configured. We're already in the loader state — just plug in the
+       readings and flip the loader off. */
     if (data.bypassed) {
       if (data.session_token) {
         persistToken(data.session_token);
@@ -134,23 +147,29 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
         result: data.result ?? get().result,
         readings: data.readings ?? null,
         sessionToken: data.session_token ?? null,
-        isPaid: true,
-        isProcessingPayment: false,
         isLoadingReadings: false,
       });
       return;
     }
 
-    /* === Normal Lemon Squeezy redirect path === */
+    /* === Normal Lemon Squeezy redirect path ===
+       Roll back the optimistic isPaid flip — they haven't actually paid
+       yet, just about to redirect to the LS checkout page. The session
+       token is persisted so the post-payment redirect can hydrate. */
     if (!data.checkout_url || !data.session_token) {
       set({
         error: 'Unexpected checkout response',
-        isProcessingPayment: false,
+        isPaid: false,
+        isLoadingReadings: false,
       });
       return;
     }
     persistToken(data.session_token);
-    set({ sessionToken: data.session_token });
+    set({
+      sessionToken: data.session_token,
+      isPaid: false,
+      isLoadingReadings: false,
+    });
     window.location.href = data.checkout_url;
   },
 
@@ -228,11 +247,20 @@ export const useSajuStore = create<SajuStore>((set, get) => ({
   },
 
   retryReadings: async () => {
-    const { sessionToken } = get();
-    if (!sessionToken) return;
+    const { sessionToken, isLoadingReadings } = get();
+    if (isLoadingReadings) return; // guard against double-clicks
+
+    /* No persisted token (dev-bypass without Supabase, or anything else
+       that left us in the failure state with no row to retry against)
+       — re-run the full checkout flow. startCheckout handles its own
+       loader transitions so the user sees the SajuLoader assemble while
+       Gemini is being called again. */
+    if (!sessionToken) {
+      await get().startCheckout();
+      return;
+    }
 
     set({ isLoadingReadings: true });
-
     try {
       await fetch('/api/payment/retry-readings', {
         method: 'POST',

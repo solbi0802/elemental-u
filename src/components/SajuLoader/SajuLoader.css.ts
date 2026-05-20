@@ -1,19 +1,30 @@
 import { style, keyframes } from '@vanilla-extract/css';
 import { vars } from '@/styles/theme.css';
 
-const spin = keyframes({
-  from: { transform: 'rotate(0deg)' },
-  to: { transform: 'rotate(360deg)' },
+/* Pentagon Builder loader.
+   - Outer guide ring pulses subtly to convey "active".
+   - Five element nodes (木火土金水) pop in one by one.
+   - Five edges connecting them draw via stroke-dashoffset.
+   - Whole pentagon stays visible for the bulk of the cycle, then fades
+     and restarts. */
+
+const ringPulse = keyframes({
+  '0%, 100%': { opacity: 0.4 },
+  '50%': { opacity: 0.75 },
 });
 
-const spinReverse = keyframes({
-  from: { transform: 'rotate(360deg)' },
-  to: { transform: 'rotate(0deg)' },
+const drawEdge = keyframes({
+  '0%, 5%': { strokeDashoffset: 200, opacity: 0 },
+  '20%': { strokeDashoffset: 0, opacity: 1 },
+  '75%': { strokeDashoffset: 0, opacity: 1 },
+  '100%': { strokeDashoffset: 0, opacity: 0 },
 });
 
-const breathe = keyframes({
-  '0%, 100%': { opacity: 0.45 },
-  '50%': { opacity: 0.85 },
+const nodePop = keyframes({
+  '0%, 5%': { opacity: 0, transform: 'scale(0.6)' },
+  '15%': { opacity: 1, transform: 'scale(1)' },
+  '80%': { opacity: 1, transform: 'scale(1)' },
+  '100%': { opacity: 0, transform: 'scale(0.9)' },
 });
 
 export const wrap = style({
@@ -25,59 +36,66 @@ export const wrap = style({
   padding: `${vars.space.xl} 0`,
 });
 
-export const sealWrap = style({
-  position: 'relative',
-  width: '140px',
-  height: '140px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
+export const pentagon = style({
+  width: '280px',
+  height: '280px',
+  '@media': {
+    'screen and (max-width: 520px)': {
+      width: '220px',
+      height: '220px',
+    },
+  },
 });
 
-export const ring = style({
-  position: 'absolute',
-  inset: 0,
-  width: '100%',
-  height: '100%',
-  pointerEvents: 'none',
+export const guideRing = style({
+  fill: 'none',
+  stroke: vars.color.goldLine,
+  strokeWidth: 1,
+  animation: `${ringPulse} 6s ease-in-out infinite`,
 });
 
-export const ringOuter = style({
-  animation: `${spin} 6s linear infinite`,
-  transformOrigin: 'center',
+export const edge = style({
+  fill: 'none',
+  stroke: vars.color.goldPrimary,
+  strokeWidth: 1.6,
+  strokeDasharray: 200,
+  strokeDashoffset: 200,
+  strokeLinecap: 'round',
+  animation: `${drawEdge} 7s ease-in-out infinite`,
+});
+
+export const node = style({
+  fill: vars.color.canvasDeep,
+  stroke: vars.color.goldLine,
+  strokeWidth: 1.5,
+  opacity: 0,
+  /* transformBox + transformOrigin so scale animations pivot around each
+     node's own center instead of the SVG (0,0) corner. */
   transformBox: 'fill-box',
-});
-
-export const ringInner = style({
-  animation: `${spinReverse} 9s linear infinite`,
   transformOrigin: 'center',
-  transformBox: 'fill-box',
+  animation: `${nodePop} 7s ease-in-out infinite`,
 });
 
-export const ringPulse = style({
-  animation: `${breathe} 2.5s ease-in-out infinite`,
-});
-
-export const seal = style({
-  fontFamily: vars.font.hanja,
-  fontSize: '60px',
+export const nodeText = style({
+  fill: vars.color.goldPrimary,
+  fontSize: '24px',
   fontWeight: 900,
-  color: vars.color.goldPrimary,
-  display: 'block',
-  lineHeight: 1,
-  position: 'relative',
-  zIndex: 1,
-  textShadow: '0 0 24px rgba(232, 185, 74, 0.4)',
+  textAnchor: 'middle',
+  dominantBaseline: 'central',
+  opacity: 0,
+  transformBox: 'fill-box',
+  transformOrigin: 'center',
+  animation: `${nodePop} 7s ease-in-out infinite`,
 });
 
-export const label = style({
+export const statusRow = style({
   marginTop: vars.space.xl,
   position: 'relative',
   width: '100%',
   height: '54px',
 });
 
-export const labelInner = style({
+export const statusInner = style({
   position: 'absolute',
   left: '50%',
   top: 0,
@@ -86,7 +104,7 @@ export const labelInner = style({
   textAlign: 'center',
 });
 
-export const labelText = style({
+export const statusEyebrow = style({
   fontFamily: vars.font.mono,
   fontSize: '12px',
   fontWeight: 600,
@@ -96,7 +114,7 @@ export const labelText = style({
   margin: 0,
 });
 
-export const labelSub = style({
+export const statusSub = style({
   fontFamily: vars.font.hanja,
   fontSize: '18px',
   fontWeight: 700,
