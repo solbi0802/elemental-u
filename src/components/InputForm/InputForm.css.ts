@@ -138,22 +138,6 @@ export const dateRow = style({
   },
 });
 
-export const timeRow = style({
-  display: 'grid',
-  gridTemplateColumns: '1fr auto 1fr',
-  gap: vars.space.xs,
-  alignItems: 'center',
-  maxWidth: '220px',
-});
-
-export const timeColon = style({
-  fontFamily: vars.font.mono,
-  fontSize: '22px',
-  fontWeight: 600,
-  color: vars.color.goldPrimary,
-  lineHeight: 1,
-  textAlign: 'center',
-});
 
 export const fieldOptional = style({
   fontWeight: 400,

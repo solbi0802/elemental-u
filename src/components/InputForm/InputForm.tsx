@@ -30,6 +30,30 @@ const MONTHS = [
 
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
 
+/* The 12 Earthly Branches (12간지) hour ranges — each spans two hours
+   and is offset by 30 minutes from clock-hour boundaries to match the
+   standard Korean saju convention. Korean labels (자시/축시/…) are
+   intentionally omitted because the UI is English-only; the time range
+   itself is unambiguous.
+
+   The form value is the midpoint of each range (e.g. 00:30 for 23:30–
+   01:30) which falls cleanly inside the calculator's HOUR_TO_BRANCH_INDEX
+   bucketing — no extra calculation needed server-side. */
+const TIME_RANGES = [
+  { value: '00:30', label: '23:30 – 01:30' },
+  { value: '02:30', label: '01:30 – 03:30' },
+  { value: '04:30', label: '03:30 – 05:30' },
+  { value: '06:30', label: '05:30 – 07:30' },
+  { value: '08:30', label: '07:30 – 09:30' },
+  { value: '10:30', label: '09:30 – 11:30' },
+  { value: '12:30', label: '11:30 – 13:30' },
+  { value: '14:30', label: '13:30 – 15:30' },
+  { value: '16:30', label: '15:30 – 17:30' },
+  { value: '18:30', label: '17:30 – 19:30' },
+  { value: '20:30', label: '19:30 – 21:30' },
+  { value: '22:30', label: '21:30 – 23:30' },
+] as const;
+
 function pad2(value: string | undefined): string {
   if (!value) return '';
   return value.padStart(2, '0');
@@ -63,9 +87,6 @@ function blockNonNumericPaste(e: React.ClipboardEvent<HTMLInputElement>): void {
   if (!/^\d+$/.test(text)) e.preventDefault();
 }
 
-/* Split year/month/day/hour/minute keep the inputs locale-neutral (English
-   only, no browser native date picker that follows OS locale). Schema
-   validates each part and assembles into birthDate / birthTime on submit. */
 const schema = z
   .object({
     name: z.string().min(1, 'Please enter your name'),
@@ -75,8 +96,10 @@ const schema = z
       .string()
       .min(1, 'Year is required')
       .regex(/^\d{4}$/, 'Year must be 4 digits'),
-    birthHour: z.string().optional(),
-    birthMinute: z.string().optional(),
+    /* birthTime is optional. When provided, it's one of the 12 midpoint
+       strings from TIME_RANGES — validated server-side anyway by the
+       saju calculator's hour-parsing fallback. */
+    birthTime: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     const year = Number(data.birthYear);
@@ -117,32 +140,9 @@ const schema = z
         return;
       }
     }
-
-    if (data.birthHour && data.birthHour !== '') {
-      const h = Number(data.birthHour);
-      if (!Number.isFinite(h) || h < 0 || h > 23) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['birthHour'],
-          message: 'Hour must be 0–23',
-        });
-      }
-    }
-    if (data.birthMinute && data.birthMinute !== '') {
-      const m = Number(data.birthMinute);
-      if (!Number.isFinite(m) || m < 0 || m > 59) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['birthMinute'],
-          message: 'Minute must be 0–59',
-        });
-      }
-    }
   });
 
 type FormData = z.infer<typeof schema>;
-
-type NumericField = 'birthYear' | 'birthHour' | 'birthMinute';
 
 export function InputForm() {
   const { setInput, fetchSaju, isLoadingChart } = useSajuStore();
@@ -159,46 +159,33 @@ export function InputForm() {
       birthMonth: '',
       birthDay: '',
       birthYear: '',
-      birthHour: '',
-      birthMinute: '',
+      birthTime: '',
     },
   });
 
-  /* Real-time clamp for the numeric fields. Strips non-digits (defense
-     against assistive tech that bypasses onKeyDown/onPaste), enforces a
-     max length so users can't type "9999" for a minute, and clamps the
-     numeric value to the upper bound so out-of-range values self-correct
-     as the user types. setValue keeps RHF state in sync with the DOM. */
-  const clampNumeric = (field: NumericField, max: number, maxLen: number) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      let val = e.target.value.replace(/\D/g, '');
-      if (val.length > maxLen) val = val.slice(0, maxLen);
-      if (val !== '' && Number(val) > max) val = String(max);
-      if (val !== e.target.value) {
-        e.target.value = val;
-        setValue(field, val, { shouldValidate: false });
-      }
-    };
+  /* Year input: strip non-digits, enforce 4-digit max length, clamp to
+     CURRENT_YEAR. setValue keeps RHF state in sync with the DOM. */
+  const clampYear = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 4) val = val.slice(0, 4);
+    if (val !== '' && Number(val) > CURRENT_YEAR) val = String(CURRENT_YEAR);
+    if (val !== e.target.value) {
+      e.target.value = val;
+      setValue('birthYear', val, { shouldValidate: false });
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     const birthDate = `${data.birthYear}-${pad2(data.birthMonth)}-${pad2(data.birthDay)}`;
-    const birthTime =
-      data.birthHour && data.birthHour !== ''
-        ? `${pad2(data.birthHour)}:${pad2(data.birthMinute || '0')}`
-        : null;
+    const birthTime = data.birthTime && data.birthTime !== '' ? data.birthTime : null;
     setInput(data.name, birthDate, birthTime);
     await fetchSaju();
   };
 
-  /* Surface the first date-related error in priority order. Layout-wise the
-     date row hosts three controls; a single message under them is cleaner
-     than per-input messages. */
   const dateError =
     errors.birthMonth?.message ||
     errors.birthDay?.message ||
     errors.birthYear?.message;
-
-  const timeError = errors.birthHour?.message || errors.birthMinute?.message;
 
   return (
     <motion.section
@@ -287,9 +274,7 @@ export function InputForm() {
               onKeyDown={blockNonNumericKey}
               onPaste={blockNonNumericPaste}
               aria-invalid={errors.birthYear ? true : undefined}
-              {...register('birthYear', {
-                onChange: clampNumeric('birthYear', CURRENT_YEAR, 4),
-              })}
+              {...register('birthYear', { onChange: clampYear })}
             />
           </div>
           {dateError && (
@@ -299,51 +284,25 @@ export function InputForm() {
           )}
         </fieldset>
 
-        <fieldset className={s.fieldset}>
-          <legend className={s.fieldLabelText}>
-            Time of birth <span className={s.fieldOptional}>(optional, 24-hour)</span>
-          </legend>
-          <div className={s.timeRow}>
-            <input
-              type="number"
-              inputMode="numeric"
-              step={1}
-              className={s.fieldInput}
-              placeholder="HH"
-              aria-label="Hour"
-              min={0}
-              max={23}
-              onKeyDown={blockNonNumericKey}
-              onPaste={blockNonNumericPaste}
-              aria-invalid={errors.birthHour ? true : undefined}
-              {...register('birthHour', {
-                onChange: clampNumeric('birthHour', 23, 2),
-              })}
-            />
-            <span className={s.timeColon} aria-hidden="true">:</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              step={1}
-              className={s.fieldInput}
-              placeholder="MM"
-              aria-label="Minute"
-              min={0}
-              max={59}
-              onKeyDown={blockNonNumericKey}
-              onPaste={blockNonNumericPaste}
-              aria-invalid={errors.birthMinute ? true : undefined}
-              {...register('birthMinute', {
-                onChange: clampNumeric('birthMinute', 59, 2),
-              })}
-            />
-          </div>
-          {timeError && (
-            <p className={s.fieldError} role="alert">
-              {timeError}
-            </p>
-          )}
-        </fieldset>
+        <div className={s.fieldGroup}>
+          <label className={s.fieldLabel}>
+            <span className={s.fieldLabelText}>
+              Time of birth <span className={s.fieldOptional}>(optional)</span>
+            </span>
+            <select
+              className={s.fieldSelect}
+              aria-label="Time of birth"
+              {...register('birthTime')}
+            >
+              <option value="">Select time range</option>
+              {TIME_RANGES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <button type="submit" className={s.submitButton} disabled={isLoadingChart}>
           {isLoadingChart ? 'Reading your chart…' : 'Reveal my destiny'}
