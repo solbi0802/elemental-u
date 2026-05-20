@@ -3,10 +3,10 @@
    is symmetric and pattern-based so it reads as a ceremonial Korean seal
    instead of a clumsy line drawing of an animal. */
 
+import { HANJA_FONT_STACK } from '@/styles/fonts';
+
 const GOLD = '#e8b94a';
 const GOLD_LINE = '#d4a857';
-
-const HANJA_FONT = 'var(--font-hanja), "Noto Serif KR", "Times New Roman", serif';
 
 /* Single pine-needle fan — 5 thin strokes radiating from one anchor point.
    Rotated around the ring at evenly-spaced angles. */
@@ -59,7 +59,7 @@ export function WoodIllustration({ size = 500 }: { size?: number }) {
         fontSize="240"
         fontWeight="700"
         fill={GOLD}
-        style={{ fontFamily: HANJA_FONT }}
+        style={{ fontFamily: HANJA_FONT_STACK }}
       >
         木
       </text>

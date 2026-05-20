@@ -22,6 +22,16 @@ export const layer = style({
   zIndex: 0,
   pointerEvents: 'none',
   overflow: 'hidden',
+  /* On narrow viewports the absolutely-positioned motifs (some up to
+     280 px wide on a 375 px screen) crowd the content. The fixed-size
+     SVGs don't scale down responsively, so hide the floating layer
+     entirely on mobile — the in-flow PatternStrip already carries the
+     pattern voltage on smaller screens. */
+  '@media': {
+    'screen and (max-width: 768px)': {
+      display: 'none',
+    },
+  },
 });
 
 export const motif = style({

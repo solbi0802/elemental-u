@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { HANJA_FONT_STACK } from '@/styles/fonts';
 import * as s from './SajuLoader.css';
 
 const STEPS = [
@@ -66,7 +67,7 @@ export function SajuLoader() {
             animate={{ opacity: 1, scale: 1, rotate: 0 }}
             exit={{ opacity: 0, scale: 0.6, rotate: 20 }}
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-            style={{ fontFamily: 'var(--font-hanja), "Noto Serif KR", serif' }}
+            style={{ fontFamily: HANJA_FONT_STACK }}
           >
             {step.hanja}
           </motion.span>

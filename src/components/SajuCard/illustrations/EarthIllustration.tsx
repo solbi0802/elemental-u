@@ -1,9 +1,9 @@
 /* Earth (土) medallion — mountain-peak band around a central hanja. */
 
+import { HANJA_FONT_STACK } from '@/styles/fonts';
+
 const GOLD = '#e8b94a';
 const GOLD_LINE = '#d4a857';
-
-const HANJA_FONT = 'var(--font-hanja), "Noto Serif KR", "Times New Roman", serif';
 
 /* Small triple-peak mountain placed on the ring at a given angle. */
 function MountainGroup({ angle }: { angle: number }) {
@@ -65,7 +65,7 @@ export function EarthIllustration({ size = 500 }: { size?: number }) {
         fontSize="230"
         fontWeight="700"
         fill={GOLD}
-        style={{ fontFamily: HANJA_FONT }}
+        style={{ fontFamily: HANJA_FONT_STACK }}
       >
         土
       </text>

@@ -1,9 +1,9 @@
 /* Fire (火) medallion — sun rays radiating around a central hanja. */
 
+import { HANJA_FONT_STACK } from '@/styles/fonts';
+
 const GOLD = '#e8b94a';
 const GOLD_LINE = '#d4a857';
-
-const HANJA_FONT = 'var(--font-hanja), "Noto Serif KR", "Times New Roman", serif';
 
 /* A pointed flame-ray that originates from a point on the ring and tapers
    inward. Drawn as a narrow triangle. */
@@ -58,7 +58,7 @@ export function FireIllustration({ size = 500 }: { size?: number }) {
         fontSize="220"
         fontWeight="700"
         fill={GOLD}
-        style={{ fontFamily: HANJA_FONT }}
+        style={{ fontFamily: HANJA_FONT_STACK }}
       >
         火
       </text>

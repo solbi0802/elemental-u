@@ -1,10 +1,10 @@
 /* Water (水) medallion — wave-arc band around a central hanja, lotus at
    the bottom. */
 
+import { HANJA_FONT_STACK } from '@/styles/fonts';
+
 const GOLD = '#e8b94a';
 const GOLD_LINE = '#d4a857';
-
-const HANJA_FONT = 'var(--font-hanja), "Noto Serif KR", "Times New Roman", serif';
 
 /* Stylized 8-petal lotus rendered as a glyph centered at (cx, cy). */
 function Lotus({ cx, cy, size }: { cx: number; cy: number; size: number }) {
@@ -88,7 +88,7 @@ export function WaterIllustration({ size = 500 }: { size?: number }) {
         fontSize="200"
         fontWeight="700"
         fill={GOLD}
-        style={{ fontFamily: HANJA_FONT }}
+        style={{ fontFamily: HANJA_FONT_STACK }}
       >
         水
       </text>

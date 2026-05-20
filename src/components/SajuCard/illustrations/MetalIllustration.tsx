@@ -1,10 +1,10 @@
 /* Metal (金) medallion — stepped-cloud (영지운) curls at the cardinal
    positions, with a central hanja. */
 
+import { HANJA_FONT_STACK } from '@/styles/fonts';
+
 const GOLD = '#e8b94a';
 const GOLD_LINE = '#d4a857';
-
-const HANJA_FONT = 'var(--font-hanja), "Noto Serif KR", "Times New Roman", serif';
 
 /* A small stepped-cloud curl. Drawn at the origin then transformed into
    position around the medallion. The curl reads as the Korean 영지운 cloud
@@ -82,7 +82,7 @@ export function MetalIllustration({ size = 500 }: { size?: number }) {
         fontSize="220"
         fontWeight="700"
         fill={GOLD}
-        style={{ fontFamily: HANJA_FONT }}
+        style={{ fontFamily: HANJA_FONT_STACK }}
       >
         金
       </text>

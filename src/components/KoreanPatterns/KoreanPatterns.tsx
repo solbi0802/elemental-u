@@ -1,5 +1,6 @@
 'use client';
 
+import { HANJA_FONT_STACK } from '@/styles/fonts';
 import * as s from './KoreanPatterns.css';
 
 /*
@@ -124,7 +125,7 @@ function LongevitySeal() {
       <circle cx="50" cy="50" r="46" stroke={GOLD_LINE} strokeWidth="2" />
       <circle cx="50" cy="50" r="38" stroke={GOLD_LINE} strokeWidth="1" />
       <text x="50" y="64" textAnchor="middle" fontSize="38" fill={GOLD} fontWeight="900"
-        style={{ fontFamily: 'var(--font-hanja), "Noto Serif KR", serif' }}>壽</text>
+        style={{ fontFamily: HANJA_FONT_STACK }}>壽</text>
     </svg>
   );
 }
@@ -136,7 +137,7 @@ function FortuneSeal() {
       <rect x="6" y="6" width="88" height="88" stroke={GOLD_LINE} strokeWidth="2" />
       <rect x="14" y="14" width="72" height="72" stroke={GOLD_LINE} strokeWidth="1" />
       <text x="50" y="64" textAnchor="middle" fontSize="38" fill={GOLD} fontWeight="900"
-        style={{ fontFamily: 'var(--font-hanja), "Noto Serif KR", serif' }}>福</text>
+        style={{ fontFamily: HANJA_FONT_STACK }}>福</text>
     </svg>
   );
 }
@@ -148,7 +149,7 @@ function DoubleHappinessSeal() {
       <circle cx="50" cy="50" r="46" stroke={GOLD_LINE} strokeWidth="2" />
       <circle cx="50" cy="50" r="38" stroke={GOLD_LINE} strokeWidth="1" />
       <text x="50" y="64" textAnchor="middle" fontSize="36" fill={GOLD} fontWeight="900"
-        style={{ fontFamily: 'var(--font-hanja), "Noto Serif KR", serif' }}>囍</text>
+        style={{ fontFamily: HANJA_FONT_STACK }}>囍</text>
     </svg>
   );
 }
@@ -237,7 +238,7 @@ export function HanjaSeal({ char = '命', size = 44 }: { char?: string; size?: n
       <circle cx="30" cy="30" r="28" stroke={GOLD_LINE} strokeWidth="1.5" />
       <circle cx="30" cy="30" r="23" stroke={GOLD_LINE} strokeWidth="0.8" />
       <text x="30" y="40" textAnchor="middle" fontSize="22" fill={GOLD} fontWeight="900"
-        style={{ fontFamily: 'var(--font-hanja), "Noto Serif KR", serif' }}>{char}</text>
+        style={{ fontFamily: HANJA_FONT_STACK }}>{char}</text>
     </svg>
   );
 }

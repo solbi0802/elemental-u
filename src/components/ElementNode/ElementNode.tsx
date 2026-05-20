@@ -2,6 +2,7 @@
 
 import type { Element } from '@/lib/saju/types';
 import { ELEMENT_META } from '@/lib/saju/types';
+import { HANJA_FONT_STACK } from '@/styles/fonts';
 
 interface Props {
   element: Element;
@@ -66,7 +67,7 @@ export function ElementNode({ element, percentage, cx, cy, isDominant, isHovered
         textAnchor="middle" dominantBaseline="central"
         fill={isHovered ? '#0d3d36' : '#e8b94a'}
         fontSize="24" fontWeight="900"
-        style={{ transition: 'fill 0.2s', fontFamily: 'var(--font-hanja), "Noto Serif KR", serif' }}
+        style={{ transition: 'fill 0.2s', fontFamily: HANJA_FONT_STACK }}
       >
         {HANJA[element]}
       </text>
