@@ -82,7 +82,12 @@ export function Paywall({ readings }: Props) {
         </motion.header>
 
         <motion.div className={s.cardEntryRow} variants={fadeUp}>
-          <Link href={cardHref} className={s.cardEntryLink}>
+          <Link
+            href={cardHref}
+            className={s.cardEntryLink}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             View your destiny card →
           </Link>
         </motion.div>
