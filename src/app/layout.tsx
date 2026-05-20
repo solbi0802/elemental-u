@@ -99,10 +99,25 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    /* translate="no" — the site is English-only by design and the Hanja
+       characters scattered through the SVG illustrations (木火土金水 in
+       the pentagon, 壽福囍 in the seal strip, 命 in the loader, etc.)
+       are decoration, not translatable text. Chrome / Edge auto-translation
+       to Korean was emptying the single-Hanja <text> elements in SVG,
+       leaving the element nodes blank. Suppressing translation site-wide
+       keeps every decorative glyph intact. */
     <html
       lang="en"
+      translate="no"
       className={`${inter.variable} ${mono.variable} ${serif.variable} ${hanja.variable}`}
     >
+      <head>
+        {/* Belt-and-suspenders: a few translation engines (notably Google
+            Translate when invoked through the Translate bar rather than the
+            in-page autodetect) respect this meta tag rather than the
+            translate attribute. */}
+        <meta name="google" content="notranslate" />
+      </head>
       <body>{children}</body>
     </html>
   );
