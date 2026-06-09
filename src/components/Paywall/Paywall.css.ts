@@ -193,6 +193,14 @@ export const ctaFootnote = style({
   marginTop: vars.space.md,
 });
 
+export const errorMessage = style({
+  fontSize: '13px',
+  lineHeight: 1.5,
+  color: vars.color.error,
+  margin: `0 auto ${vars.space.md}`,
+  maxWidth: '420px',
+});
+
 /* ── unlocked ── */
 export const unlockedSection = style({
   padding: `${vars.space.section} ${vars.space.lg}`,
@@ -252,4 +260,13 @@ export const cardEntryLink = style({
     color: vars.color.onGold,
     borderColor: vars.color.goldPrimary,
   },
+});
+
+export const disclaimer = style({
+  fontSize: '12px',
+  lineHeight: 1.6,
+  color: vars.color.creamMuted,
+  textAlign: 'center',
+  maxWidth: '560px',
+  margin: `${vars.space.xl} auto 0`,
 });

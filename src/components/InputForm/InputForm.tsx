@@ -145,7 +145,7 @@ const schema = z
 type FormData = z.infer<typeof schema>;
 
 export function InputForm() {
-  const { setInput, fetchSaju, isLoadingChart } = useSajuStore();
+  const { setInput, fetchSaju, isLoadingChart, error } = useSajuStore();
 
   const {
     register,
@@ -307,10 +307,16 @@ export function InputForm() {
         <button type="submit" className={s.submitButton} disabled={isLoadingChart}>
           {isLoadingChart ? 'Reading your chart…' : 'Reveal my destiny'}
         </button>
+        {error && (
+          <p className={s.fieldError} role="alert">
+            {error}
+          </p>
+        )}
       </motion.form>
 
       <motion.small className={s.footnote} variants={fadeUp}>
-        Your data is never stored or shared.
+        Your birth details are processed to create this reading and are not
+        stored by Elemental-U during the free beta.
       </motion.small>
     </motion.section>
   );

@@ -59,6 +59,6 @@ export const vars = createGlobalTheme(':root', {
     sans: 'var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     serif: 'var(--font-serif), "Noto Serif KR", "Times New Roman", Georgia, serif',
     hanja: 'var(--font-hanja), "Noto Serif KR", "Times New Roman", serif',
-    mono: 'var(--font-mono), "SF Mono", "Menlo", monospace',
+    mono: 'var(--font-sans), "SF Mono", "Menlo", monospace',
   },
 });

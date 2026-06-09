@@ -58,7 +58,18 @@ export const titleRow = style({
 });
 
 export const icon = style({
-  fontSize: '28px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '36px',
+  height: '36px',
+  border: `1px solid ${vars.color.goldLine}`,
+  borderRadius: vars.radius.pill,
+  fontFamily: vars.font.mono,
+  fontSize: '10px',
+  fontWeight: 700,
+  letterSpacing: '0.5px',
+  color: vars.color.goldPrimary,
   flexShrink: 0,
 });
 

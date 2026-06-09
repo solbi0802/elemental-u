@@ -1,7 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { GeminiReadingResponse } from './types';
+import {
+  geminiReadingResponseSchema,
+  type GeminiReadingResponse,
+} from './types';
 import type { SajuResult } from '../saju/types';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompts';
+import { retrieveKnowledge } from '../saju/knowledge';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -18,13 +22,13 @@ export async function generateReadings(
     systemInstruction: SYSTEM_PROMPT,
   });
 
-  const userPrompt = buildUserPrompt(name, result);
+  const userPrompt = buildUserPrompt(name, result, retrieveKnowledge(result));
   const response = await model.generateContent(userPrompt);
   const text = response.response.text();
 
   try {
-    return JSON.parse(text) as GeminiReadingResponse;
+    return geminiReadingResponseSchema.parse(JSON.parse(text));
   } catch {
-    throw new Error('Failed to parse Gemini response as JSON');
+    throw new Error('Gemini returned an invalid reading response');
   }
 }

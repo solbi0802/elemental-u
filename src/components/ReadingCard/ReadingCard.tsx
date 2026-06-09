@@ -1,7 +1,9 @@
 'use client';
 
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { ReadingSection } from '@/lib/saju/types';
+import { trackEvent } from '@/lib/analytics';
 import { slideUp } from '@/styles/animations';
 import { HanjaSeal } from '@/components/KoreanPatterns/KoreanPatterns';
 import * as s from './ReadingCard.css';
@@ -11,32 +13,32 @@ interface Props {
   index: number;
 }
 
-/* Three jade variants — rotates across 6 readings as: A B C A B C */
 const VARIANTS = [
-  { className: s.variantA, sealChar: '壽' },  // canvasSoft + gold hairline
-  { className: s.variantB, sealChar: '福' },  // canvasDeep + gold accent (featured)
-  { className: s.variantC, sealChar: '囍' },  // canvasElevated + cream text
+  { className: s.variantA, sealChar: '命' },
+  { className: s.variantB, sealChar: '運' },
+  { className: s.variantC, sealChar: '道' },
 ] as const;
 
 const SUBTITLES: Record<string, string> = {
   'Life Fortune': 'EARLY · MID · LATE YEARS',
-  '2026 Fortune': 'YEAR OF THE FIRE HORSE · 丙午',
+  '2026 Fortune': 'YEAR OF THE FIRE HORSE',
   'Career Reading': 'PATH · STRENGTHS · TIMING',
-  'Love Reading': 'PATTERNS · COMPATIBILITY',
-  'Health Reading': 'TENDENCIES · WELLNESS',
-  'Wealth Reading': 'FINANCE · OPPORTUNITY',
+  'Love Reading': 'PATTERNS · COMMUNICATION',
+  'Wellness Reading': 'TENDENCIES · WELLBEING',
+  'Money Patterns': 'HABITS · PLANNING',
 };
 
 const TITLE_SEALS: Record<string, string> = {
   'Life Fortune': '命',
-  '2026 Fortune': '運',
+  '2026 Fortune': '年',
   'Career Reading': '業',
-  'Love Reading': '緣',
-  'Health Reading': '康',
-  'Wealth Reading': '財',
+  'Love Reading': '愛',
+  'Wellness Reading': '健',
+  'Money Patterns': '財',
 };
 
 export function ReadingCard({ reading, index }: Props) {
+  const viewedRef = useRef(false);
   const variant = VARIANTS[index % VARIANTS.length];
   const sealChar = TITLE_SEALS[reading.title] || variant.sealChar;
 
@@ -46,8 +48,16 @@ export function ReadingCard({ reading, index }: Props) {
       variants={slideUp}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true }}
+      viewport={{ once: true, amount: 0.35 }}
       custom={index}
+      onViewportEnter={() => {
+        if (viewedRef.current) return;
+        viewedRef.current = true;
+        trackEvent('reading_viewed', {
+          reading: reading.title,
+          position: index + 1,
+        });
+      }}
     >
       <div className={s.seal} aria-hidden="true">
         <HanjaSeal char={sealChar} size={56} />
