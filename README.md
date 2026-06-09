@@ -1,109 +1,80 @@
 # Elemental-U
 
-A Korean Four Pillars (`四柱命理`) destiny reading service for English-speaking
-users. Built with Next.js 16, vanilla-extract, Zustand, Gemini, Lemon Squeezy,
-and Supabase.
+Elemental-U is a free beta for AI-assisted Korean Four Pillars (Saju)
+readings. It calculates an elemental chart locally on the server, retrieves
+relevant interpretation notes, and asks Gemini to produce six reflective
+reading sections.
 
-## Quick start
+## Current product flow
+
+1. The user enters a name, birth date, and optional birth time.
+2. `/api/saju/chart` returns the calculated Four Pillars chart.
+3. The user requests a free full reading.
+4. `/api/saju/readings` retrieves relevant knowledge notes and calls Gemini.
+5. The result can be read in the app or represented as a shareable destiny
+   card.
+
+The public UI does not start a checkout. Legacy Lemon Squeezy routes remain
+in the repository only as inactive integration code.
+
+## Local development
 
 ```bash
 npm install
-cp .env.example .env.local      # then fill in real values — see below
 npm run dev
 ```
 
-## Environment setup
+Required environment variable:
 
-All four services in `.env.example` need accounts before payments work
-end-to-end. The app degrades gracefully without them:
-
-| Service | What stops working if missing |
-| --- | --- |
-| `GEMINI_API_KEY` | Readings never generate. Paywall stays in Unavailable state after payment. |
-| `LEMONSQUEEZY_*` | `/api/payment/checkout` returns 502. Paywall CTA shows an error. |
-| `SUPABASE_*` | All payment routes return 500. Free flow (chart only) still works. |
-| `NEXT_PUBLIC_SITE_URL` | LS redirect URL points at request origin instead — works locally but breaks behind tunnels. |
-
-### Supabase
-
-1. New project at supabase.com (any region).
-2. In **SQL Editor**, paste and run `supabase/migrations/0001_purchases.sql`.
-3. **Settings → API** → copy:
-   - **Project URL** → `SUPABASE_URL`
-   - **service_role secret** (NOT the anon key) → `SUPABASE_SERVICE_ROLE_KEY`
-
-### Lemon Squeezy
-
-1. Sign up at lemonsqueezy.com (individual account fine — no business
-   registration needed).
-2. Create a **Store**.
-3. Create a **Product** named "Elemental-U Complete Reading" priced at $2.99.
-   Note the **Variant ID** from the variant page URL.
-4. **Settings → API** → create an API key → `LEMONSQUEEZY_API_KEY`.
-5. **Store overview** → `LEMONSQUEEZY_STORE_ID`.
-6. **Settings → Webhooks** → add a webhook:
-   - URL: `https://<your-domain>/api/payment/webhook`
-     (use `ngrok http 3000` and the ngrok URL for local dev).
-   - Events: `order_created` (at minimum).
-   - Copy the **signing secret** → `LEMONSQUEEZY_WEBHOOK_SECRET`.
-
-### Gemini
-
-1. Get a key from [Google AI Studio](https://aistudio.google.com/apikey).
-2. Free tier covers 1,500 requests/day — plenty for testing.
-
-## Local testing the payment flow
-
-```bash
-# Terminal 1
-npm run dev
-
-# Terminal 2 — expose localhost for Lemon Squeezy webhooks
-ngrok http 3000
-# Copy the https URL into the Lemon Squeezy webhook settings.
-
-# Terminal 3 — make sure env is loaded
-cat .env.local
+```dotenv
+GEMINI_API_KEY=...
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=... # service_role JWT or sb_secret_ server key
+RATE_LIMIT_SALT=...
 ```
 
-Then visit http://localhost:3000, fill in the form, click the paywall,
-pay with Lemon Squeezy's test card `4242 4242 4242 4242` (any future
-expiry, any CVC). The page should redirect back, show the SajuLoader
-for a few seconds, then reveal the six readings.
+Production free readings fail closed unless the Supabase configuration is
+valid and `supabase/migrations/0002_reading_rate_limits.sql` has been applied.
+The database function provides an atomic rate limit shared by all serverless
+instances. Local development uses an in-memory limiter.
 
-## Common scripts
+## Knowledge-grounded readings
 
-```bash
-npm run dev          # next dev with HMR
-npm run build        # production build (also runs tsc --noEmit)
-npm run lint         # eslint
-npm test             # vitest (saju calculator unit tests)
+The pilot knowledge base lives in:
+
+```text
+src/lib/saju/knowledge.ts
 ```
 
-## Architecture
+Each entry has:
 
-- `src/app/page.tsx` — single client page. Branches between `InputForm`
-  and the result view based on the zustand `result` field.
-- `src/lib/store.ts` — Zustand store. Holds chart + readings + session
-  token. Drives the polling loop after a payment redirect.
-- `src/app/api/saju/chart` — pure calculation, no DB, no Gemini.
-- `src/app/api/payment/checkout` — inserts a `pending` row, creates an
-  LS checkout, returns the hosted URL.
-- `src/app/api/payment/webhook` — LS hits this on `order_created`.
-  HMAC-verifies, then calls Gemini in `after()` so the response stays
-  under Vercel Hobby's 10 s function budget.
-- `src/app/api/payment/verify` — client poll target. Returns
-  `{ status, readings, saju_result, name, ls_order_id }`.
-- `src/app/api/payment/retry-readings` — re-runs Gemini for an
-  already-paid session that failed generation. Gated on `ls_order_id`.
+- a stable source ID
+- applicable element topics
+- a concise interpretation principle
+- a human-readable source label
 
-## Deploying to Vercel
+`retrieveKnowledge()` selects chart-relevant entries. The selected notes are
+inserted into the Gemini prompt by `src/lib/gemini/prompts.ts`.
 
-1. Push to GitHub.
-2. Import the repo in Vercel.
-3. Add every variable from `.env.example` to **Project Settings →
-   Environment Variables** (Production scope at minimum).
-4. Set `NEXT_PUBLIC_SITE_URL` to the Vercel domain.
-5. Update the Lemon Squeezy webhook URL to point at the deployed
-   domain.
-6. Switch LS from test mode to live mode when ready.
+The bundled entries are methodology samples, not a finished Saju corpus.
+Replace or expand them with summaries from sources the project owns or has
+permission to use. Keep source labels and separate conflicting schools of
+interpretation instead of blending them silently.
+
+## Analytics
+
+`src/lib/analytics.ts` emits privacy-conscious product events without names,
+birth details, or reading text. It supports `gtag`, Plausible, or a custom
+`elemental-u:analytics` browser event when a provider is configured.
+
+## Verification
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+The test suite covers the chart calculator, knowledge retrieval, and
+knowledge-context prompt construction.

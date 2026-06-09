@@ -38,11 +38,13 @@ function hasLemonSqueezyConfig(): boolean {
 function hasSupabaseConfig(): boolean {
   const url = process.env.SUPABASE_URL ?? '';
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+  const validServerKey =
+    (key.startsWith('eyJ') && key.length > 100) ||
+    key.startsWith('sb_secret_');
   return (
     url.startsWith('https://') &&
     url.includes('.supabase.co') &&
-    key.startsWith('eyJ') &&
-    key.length > 100
+    validServerKey
   );
 }
 
@@ -96,6 +98,13 @@ async function tryPersistBypass(input: {
 }
 
 export async function POST(request: NextRequest) {
+  if (process.env.ENABLE_LEGACY_PAYMENTS !== 'true') {
+    return NextResponse.json(
+      { error: 'Payments are disabled while Elemental-U is in free beta.' },
+      { status: 410 },
+    );
+  }
+
   let body: CheckoutBody;
   try {
     body = (await request.json()) as CheckoutBody;
